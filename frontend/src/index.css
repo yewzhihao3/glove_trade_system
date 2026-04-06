@@ -1,0 +1,90 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-zen-950: #020617;
+  --color-zen-900: #0f172a;
+  --color-zen-800: #1e293b;
+  --color-accent-blue: #38bdf8;
+  --color-accent-emerald: #10b981;
+}
+
+:root {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  --bg-primary: #f1f5f9; /* Richer background so cards pop out */
+  --text-primary: #0f172a;
+  --glass-bg: rgba(255, 255, 255, 0.85); /* Slightly frosty solid */
+  --glass-border: rgba(0, 0, 0, 0.05); /* Soft border */
+  --glow-accent-1: rgba(56, 189, 248, 0.2);
+  --glow-accent-2: rgba(16, 185, 129, 0.2);
+  --glass-shadow: 0 10px 40px -10px rgba(0,0,0,0.08); /* Clean modern shadow */
+}
+
+.dark {
+  --bg-primary: #020617;
+  --text-primary: #f8fafc;
+  --glass-bg: rgba(15, 23, 42, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.05);
+  --glow-accent-1: rgba(56, 189, 248, 0.05);
+  --glow-accent-2: rgba(16, 185, 129, 0.05);
+  --glass-shadow: 0 20px 40px -10px rgba(0,0,0,0.5); /* Emulate depth in dark */
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+/* Custom Scrollbar for Futuristic Look */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.1);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 189, 248, 0.3);
+}
+
+/* Glassmorphism Utility */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  transition: all 0.5s ease;
+}
+
+/* Zen Glow Effect */
+.zen-glow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 0% 0%, var(--glow-accent-1) 0%, transparent 50%),
+    radial-gradient(circle at 100% 100%, var(--glow-accent-2) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: -1;
+  transition: all 0.5s ease;
+}
+
+/* Fix for browser default light-mode overrides in select */
+select option {
+  background-color: #020617;
+  color: #94a3b8;
+}

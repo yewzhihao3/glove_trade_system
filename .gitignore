@@ -1,0 +1,42 @@
+# Frontend / Node
+node_modules/
+dist/
+dist-ssr/
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Backend / Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+venv/
+env/
+.venv/
+build/
+develop-eggs/
+eggs/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+
+# Environment Variables
+.env
+.env.*
+!.env.example
+
+# OS / Editor / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
