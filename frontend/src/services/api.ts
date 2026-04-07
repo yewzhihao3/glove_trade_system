@@ -54,6 +54,27 @@ export interface TradeHistory {
   created_at: string;
 }
 
+export interface PaginatedHistoryResponse {
+  data: TradeHistory[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface UploadHistoryResponse {
+  inserted_rows: number;
+  skipped_rows: number;
+  message: string;
+}
+
+export interface AnalyticalResult {
+  total_quantity_pcs: number;
+  company_name?: string;
+  ship_to_country?: string;
+  product_code?: string;
+  month?: string;
+}
+
 export const leadService = {
   getLeads: async (params?: { hs_code?: string; country?: string; keyword?: string }) => {
     const response = await api.get('/leads', { params });
@@ -105,8 +126,53 @@ export const hsCodeService = {
 };
 
 export const tradeService = {
-  getHistory: async (params?: { company?: string; country?: string }) => {
+  getHistory: async (params?: { 
+    page?: number; 
+    page_size?: number; 
+    search?: string;
+    date_from?: string;
+    date_to?: string;
+    company_name?: string; 
+    country?: string;
+    product_code?: string;
+    item_no?: string;
+    posting_group?: string;
+  }): Promise<PaginatedHistoryResponse> => {
     const response = await api.get('/history', { params });
+    return response.data;
+  },
+
+  uploadHistory: async (file: File): Promise<UploadHistoryResponse> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post('/history/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data;
+  },
+
+  getTopBuyers: async (limit: number = 10): Promise<AnalyticalResult[]> => {
+    const response = await api.get('/analytics/top-buyers', { params: { limit } });
+    return response.data;
+  },
+
+  getTopCountries: async (limit: number = 10): Promise<AnalyticalResult[]> => {
+    const response = await api.get('/analytics/top-countries', { params: { limit } });
+    return response.data;
+  },
+
+  getTopProducts: async (limit: number = 10): Promise<AnalyticalResult[]> => {
+    const response = await api.get('/analytics/top-products', { params: { limit } });
+    return response.data;
+  },
+
+  getMonthlyTrend: async (): Promise<AnalyticalResult[]> => {
+    const response = await api.get('/analytics/monthly-trend');
+    return response.data;
+  },
+
+  getCompanyTrend: async (companyName: string): Promise<AnalyticalResult[]> => {
+    const response = await api.get('/analytics/company-trend', { params: { company_name: companyName } });
     return response.data;
   }
 };

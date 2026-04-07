@@ -75,19 +75,28 @@ def process_history_upload(db: Session, file: UploadFile) -> Tuple[int, int]:
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error reading file: {str(e)}")
         
-    # Convert dataframe column names to match model
-    # To handle inconsistent user inputs, we normalize columns:
-    df.columns = df.columns.str.lower().str.strip().str.replace(' ', '_')
+    # Convert dataframe column names to match model using strict legacy regex rules
+    import re
+    def clean_column_name(col_name: str) -> str:
+        cleaned = str(col_name).lower()
+        cleaned = re.sub(r'[^\w\s]', '', cleaned)  # Remove special characters except spaces
+        cleaned = re.sub(r'\s+', '_', cleaned)     # Replace spaces and newlines with underscores
+        cleaned = re.sub(r'_+', '_', cleaned)      # Remove multiple underscores
+        return cleaned.strip('_')
+        
+    df.columns = [clean_column_name(c) for c in df.columns]
     
     # Expect certain core columns, provide fallbacks
     col_mapping = {
         'posting_date': ['posting_date', 'date', 'sales_date'],
-        'company_name': ['company_name', 'customer_name', 'client', 'cust_name'],
+        'company_name': ['company_name', 'client', 'company'],
+        'cust_name': ['cust_name', 'customer_name', 'customer name', 'customer'],
+        'ship_to_name': ['ship_to_name', 'shipto_name', 'shiptoname', 'ship_to'],
         'product_code': ['product_code', 'item_code', 'code'],
-        'item_no': ['item_no', 'item_num', 'item_number'],
-        'invoice_no': ['invoice_no', 'inv_no', 'invoice', 'document_no'],
-        'total_quantity_pcs': ['total_quantity_pcs', 'quantity', 'qty', 'total_qty'],
-        'ship_to_country': ['ship_to_country', 'country', 'region'],
+        'item_no': ['item_no', 'item_num', 'item_number', 'itemno'],
+        'invoice_no': ['invoice_no', 'inv_no', 'invoice', 'document_no', 'invoiceno'],
+        'total_quantity_pcs': ['total_quantity_pcs', 'quantity', 'qty', 'total_qty', 'total_quantity'],
+        'ship_to_country': ['ship_to_country', 'country', 'region', 'shipto_country', 'bill_to_country', 'billto_country'],
         'description_brand': ['description_brand', 'description', 'brand', 'desc'],
         'base_uom_item': ['base_uom_item', 'uom', 'unit'],
         'posting_group': ['posting_group', 'group'],
@@ -105,7 +114,7 @@ def process_history_upload(db: Session, file: UploadFile) -> Tuple[int, int]:
                 break
         if not found:
             # If a critical column is missing, assign empty strings or zeros appropriately
-            if target_col in ['posting_date', 'company_name', 'product_code', 'item_no', 'invoice_no']:
+            if target_col in ['posting_date', 'company_name', 'cust_name', 'ship_to_name', 'product_code', 'item_no', 'invoice_no']:
                 final_ds[target_col] = "" # Prevent None for indexing checks
             elif target_col == 'total_quantity_pcs':
                 final_ds[target_col] = 0
@@ -114,8 +123,8 @@ def process_history_upload(db: Session, file: UploadFile) -> Tuple[int, int]:
                 
     mapped_df = pd.DataFrame(final_ds)
     mapped_df = mapped_df.fillna({
-        'posting_date': '', 'company_name': '', 'product_code': '', 
-        'item_no': '', 'invoice_no': '', 'total_quantity_pcs': 0
+        'posting_date': '', 'company_name': '', 'cust_name': '', 'ship_to_name': '', 'product_code': '', 
+        'item_no': '', 'invoice_no': '', 'total_quantity_pcs': 0, 'ship_to_country': ''
     })
     
     # Cast total_quantity_pcs to numeric
@@ -139,14 +148,25 @@ def process_history_upload(db: Session, file: UploadFile) -> Tuple[int, int]:
         chunk = batch_records[i:i + chunk_size]
         new_objects = []
         for row in chunk:
-            # Duplicate validation check
-            # Realistically, for huge files, querying per-row is slow. A better approach is using IN queries 
-            # or relying on an actual UNIQUE CONSTRAINT in SQLite and using Insert.. On Conflict Ignore
-            # Since SQLite doesn't have an explict unique constraint on trade_history we have to do it.
+            # CLI logic for determining company name based on customer name vs ship_to_name
+            cust = str(row.get('cust_name', '') or '')
+            ship = str(row.get('ship_to_name', '') or '')
+            raw_comp = str(row.get('company_name', '') or '')
             
+            if cust and 'gallant' in cust.lower():
+                comp_name = ship.strip() if ship and ship.strip() else cust
+            elif cust:
+                comp_name = cust.strip()
+            elif ship:
+                comp_name = ship.strip()
+            else:
+                comp_name = raw_comp.strip()
+            
+            row['company_name'] = comp_name
+
             exists = db.query(models.TradeHistory.id).filter_by(
                 posting_date=str(row['posting_date']),
-                company_name=str(row['company_name']),
+                company_name=comp_name,
                 product_code=str(row['product_code']),
                 item_no=str(row['item_no']),
                 invoice_no=str(row['invoice_no'])
@@ -157,10 +177,12 @@ def process_history_upload(db: Session, file: UploadFile) -> Tuple[int, int]:
             else:
                 # Convert to string to be safe where expected
                 row['posting_date'] = str(row['posting_date'])
-                row['company_name'] = str(row['company_name'])
                 row['product_code'] = str(row['product_code'])
                 row['item_no'] = str(row['item_no'])
                 row['invoice_no'] = str(row['invoice_no'])
+                row['cust_name'] = cust
+                row['ship_to_name'] = ship
+                row['ship_to_country'] = str(row.get('ship_to_country', '') or '')
                 
                 new_objects.append(models.TradeHistory(**row))
                 inserted += 1

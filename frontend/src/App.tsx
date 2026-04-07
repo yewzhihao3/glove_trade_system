@@ -6,6 +6,11 @@ import HSCodeManagement from './pages/HSCodeManagement';
 import SavedLeads from './pages/SavedLeads';
 import Login from './pages/Login';
 import UserManagement from './pages/UserManagement';
+
+import TradeDashboard from './pages/analytics/TradeDashboard';
+import TradeExplore from './pages/analytics/TradeExplore';
+import TradeInsights from './pages/analytics/TradeInsights';
+import TradeUpload from './pages/analytics/TradeUpload';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -56,7 +61,12 @@ const AppContent = () => {
               <Route path="/hscodes" element={<ProtectedRoute><HSCodeIntelligence /></ProtectedRoute>} />
               <Route path="/hscodes/manage" element={<ProtectedRoute><HSCodeManagement /></ProtectedRoute>} />
               <Route path="/leads" element={<ProtectedRoute><SavedLeads /></ProtectedRoute>} />
-              <Route path="/history" element={<ProtectedRoute><div className="flex items-center justify-center h-full text-slate-500 text-xl font-light tracking-widest uppercase italic">Trade Analytics Coming Soon</div></ProtectedRoute>} />
+              
+              <Route path="/analytics/dashboard" element={<ProtectedRoute><TradeDashboard /></ProtectedRoute>} />
+              <Route path="/analytics/explore" element={<ProtectedRoute><TradeExplore /></ProtectedRoute>} />
+              <Route path="/analytics/insights" element={<ProtectedRoute><TradeInsights /></ProtectedRoute>} />
+              <Route path="/analytics/upload" element={<ProtectedRoute><TradeUpload /></ProtectedRoute>} />
+              
               <Route path="/settings/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

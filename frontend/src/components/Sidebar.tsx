@@ -43,6 +43,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     const location = useLocation();
     const [isHSMenuOpen, setIsHSMenuOpen] = useState(location.pathname.startsWith('/hscodes'));
     const [isLeadMenuOpen, setIsLeadMenuOpen] = useState(location.pathname === '/' || location.pathname === '/leads');
+    const [isAnalyticsMenuOpen, setIsAnalyticsMenuOpen] = useState(location.pathname.startsWith('/analytics'));
     const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(location.pathname.startsWith('/settings'));
     const { logout, user } = useAuth();
 
@@ -145,13 +146,54 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                         )}
                     </div>
                     
-                    <SidebarItem
-                        icon={BookOpen}
-                        label="Trade History"
-                        to="/history"
-                        active={location.pathname === '/history'}
-                        onClick={onClose}
-                    />
+                    <div className="flex flex-col gap-1">
+                        <button
+                            onClick={() => setIsAnalyticsMenuOpen(!isAnalyticsMenuOpen)}
+                            className="w-full text-left"
+                        >
+                            <SidebarItem
+                                icon={BookOpen}
+                                label="Trade Analytics"
+                                to="/analytics/dashboard"
+                                active={location.pathname.startsWith('/analytics')}
+                                hasSubmenu
+                                isOpen={isAnalyticsMenuOpen}
+                            />
+                        </button>
+                        
+                        {isAnalyticsMenuOpen && (
+                            <div className="flex flex-col gap-1 py-1 animate-in slide-in-from-top-2 duration-300">
+                                <SubSidebarItem
+                                    icon={LayoutDashboard}
+                                    label="Dashboard"
+                                    to="/analytics/dashboard"
+                                    active={location.pathname === '/analytics/dashboard'}
+                                    onClick={onClose}
+                                />
+                                <SubSidebarItem
+                                    icon={Database}
+                                    label="Data Explore"
+                                    to="/analytics/explore"
+                                    active={location.pathname === '/analytics/explore'}
+                                    onClick={onClose}
+                                />
+                                <SubSidebarItem
+                                    icon={Search}
+                                    label="Insights"
+                                    to="/analytics/insights"
+                                    active={location.pathname === '/analytics/insights'}
+                                    onClick={onClose}
+                                />
+                                <SubSidebarItem
+                                    icon={FileSearch}
+                                    label="Data Upload"
+                                    to="/analytics/upload"
+                                    active={location.pathname === '/analytics/upload'}
+                                    onClick={onClose}
+                                />
+                            </div>
+                        )}
+                    </div>
                     <div className="my-6 border-t border-black/5 dark:border-white/5 mx-2" />
                     
                     <div className="flex flex-col gap-1">
