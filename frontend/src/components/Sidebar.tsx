@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Search, LayoutDashboard, FileSearch, Building2, Settings, User, LogOut, Globe, X, BookOpen, ChevronDown, ShieldCheck, Database } from 'lucide-react';
+import { Search, LayoutDashboard, FileSearch, Building2, Settings, User, LogOut, Globe, X, BookOpen, ChevronDown, ShieldCheck, Database, Target } from 'lucide-react';
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 
@@ -182,6 +182,13 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                                     label="Insights"
                                     to="/analytics/insights"
                                     active={location.pathname === '/analytics/insights'}
+                                    onClick={onClose}
+                                />
+                                <SubSidebarItem
+                                    icon={Target}
+                                    label="Buyer Finder"
+                                    to="/analytics/buyers"
+                                    active={location.pathname === '/analytics/buyers'}
                                     onClick={onClose}
                                 />
                                 <SubSidebarItem

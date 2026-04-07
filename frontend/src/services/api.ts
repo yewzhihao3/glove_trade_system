@@ -96,6 +96,26 @@ export interface DateParams {
   date_to?: string | null;
 }
 
+export interface BuyerByProduct {
+  company_name: string;
+  country: string;
+  total_volume: number;
+  transaction_count: number;
+  last_purchase: string;
+}
+
+export interface RecommendedBuyer extends BuyerByProduct {
+  match_reason: string;
+  is_exact_match: boolean;
+}
+
+export interface BuyerFinderParams extends DateParams {
+  product_code?: string;
+  size?: string;
+  country?: string;
+  limit?: number;
+}
+
 export const leadService = {
   getLeads: async (params?: { hs_code?: string; country?: string; keyword?: string }) => {
     const response = await api.get('/leads', { params });
@@ -227,7 +247,36 @@ export const tradeService = {
       params: { min_transactions: minTransactions, min_value: minValue, ...dates } 
     });
     return response.data;
+  },
+
+  getBuyersByProduct: async (params: BuyerFinderParams): Promise<BuyerByProduct[]> => {
+    const response = await api.get('/analytics/buyers-by-product', { params });
+    return response.data;
+  },
+
+  getRecommendedBuyers: async (params: BuyerFinderParams): Promise<RecommendedBuyer[]> => {
+    const response = await api.get('/analytics/recommended-buyers', { params });
+    return response.data;
   }
+};
+
+export const filterService = {
+  getProductCodes: async (search: string, limit = 20): Promise<string[]> => {
+    const response = await api.get('/filters/product-codes', { params: { search: search || undefined, limit } });
+    return response.data;
+  },
+
+  getCountries: async (search: string, limit = 20): Promise<string[]> => {
+    const response = await api.get('/filters/countries', { params: { search: search || undefined, limit } });
+    return response.data;
+  },
+
+  getSizes: async (country?: string): Promise<string[]> => {
+    const response = await api.get('/filters/sizes', {
+      params: country ? { country } : undefined,
+    });
+    return response.data;
+  },
 };
 
 export const healthService = {

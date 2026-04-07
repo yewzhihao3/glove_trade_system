@@ -122,3 +122,19 @@ class PotentialBuyerResponse(BaseModel):
     first_purchase: str
     last_purchase: str
     activity_period: str
+
+class BuyerByProductResponse(BaseModel):
+    company_name: str
+    country: str
+    total_volume: int
+    transaction_count: int
+    last_purchase: str
+
+class RecommendedBuyerResponse(BaseModel):
+    company_name: str
+    country: str
+    total_volume: int
+    transaction_count: int
+    last_purchase: str
+    match_reason: str
+    is_exact_match: bool = False

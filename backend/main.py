@@ -10,6 +10,7 @@ from services import ai_service
 from routes.auth import router as auth_router, get_current_user
 from routes.history import router as history_router
 from routes.analytics import router as analytics_router
+from routes.filters import router as filters_router
 
 # Create tables
 models.Base.metadata.create_all(bind=engine)
@@ -27,6 +28,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(history_router)
 app.include_router(analytics_router)
+app.include_router(filters_router)
 
 @app.get("/health")
 def health_check():
