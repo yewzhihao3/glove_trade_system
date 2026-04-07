@@ -8,6 +8,8 @@ from models import models
 from schemas import schemas
 from services import ai_service
 from routes.auth import router as auth_router, get_current_user
+from routes.history import router as history_router
+from routes.analytics import router as analytics_router
 
 # Create tables
 models.Base.metadata.create_all(bind=engine)
@@ -23,6 +25,8 @@ app.add_middleware(
 )
 
 app.include_router(auth_router)
+app.include_router(history_router)
+app.include_router(analytics_router)
 
 @app.get("/health")
 def health_check():
@@ -247,18 +251,4 @@ def delete_hscode(hscode_id: int, db: Session = Depends(get_db), current_user = 
         db.rollback()
         raise HTTPException(status_code=500, detail="Could not delete record")
 
-# --- TRADE HISTORY ENDPOINTS ---
 
-@app.get("/history", response_model=List[schemas.TradeHistory])
-def get_history(
-    company: Optional[str] = None, 
-    country: Optional[str] = None,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
-):
-    query = db.query(models.TradeHistory)
-    if company:
-        query = query.filter(models.TradeHistory.company_name.contains(company))
-    if country:
-        query = query.filter(models.TradeHistory.ship_to_country == country)
-    return query.order_by(models.TradeHistory.posting_date.desc()).all()

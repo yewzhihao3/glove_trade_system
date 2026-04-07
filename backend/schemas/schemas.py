@@ -62,3 +62,33 @@ class GenerateLeadsRequest(BaseModel):
     hs_code: str
     keyword: str
     country: str
+
+
+# --- Pagination & Analytics Schemas ---
+
+class PaginatedHistoryResponse(BaseModel):
+    data: List[TradeHistory]
+    total: int
+    page: int
+    page_size: int
+
+class UploadHistoryResponse(BaseModel):
+    inserted_rows: int
+    skipped_rows: int
+    message: str
+
+class TopBuyerResponse(BaseModel):
+    company_name: str
+    total_quantity_pcs: int
+
+class TopCountryResponse(BaseModel):
+    ship_to_country: str
+    total_quantity_pcs: int
+
+class TopProductResponse(BaseModel):
+    product_code: str
+    total_quantity_pcs: int
+
+class MonthlyTrendResponse(BaseModel):
+    month: str
+    total_quantity_pcs: int

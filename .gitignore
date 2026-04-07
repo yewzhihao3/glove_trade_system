@@ -40,3 +40,7 @@ Thumbs.db
 *.swp
 *.swo
 *~
+
+
+# ignore this file
+/glove_buyer_cli

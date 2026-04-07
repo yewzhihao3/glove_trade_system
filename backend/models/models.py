@@ -35,7 +35,7 @@ class TradeHistory(Base):
     __tablename__ = "trade_history"
 
     id = Column(Integer, primary_key=True, index=True)
-    posting_date = Column(String)  # Storing as string to match CLI's yyyy-mm-dd
+    posting_date = Column(String, index=True)  # Storing as string to match CLI's yyyy-mm-dd
     cust_name = Column(String, index=True)
     ship_to_country = Column(String, index=True)
     ship_to_name = Column(String)
