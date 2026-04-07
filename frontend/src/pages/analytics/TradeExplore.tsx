@@ -22,7 +22,7 @@ const TradeExplore: React.FC = () => {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
-  const pageSize = 50; // default page size
+  const [pageSize, setPageSize] = useState(10);
 
   const fetchHistory = async (currentPage: number, appliedFilters: FilterState) => {
     setLoading(true);
@@ -43,10 +43,10 @@ const TradeExplore: React.FC = () => {
     }
   };
 
-  // Fetch when page or active filters change
+  // Fetch when page, pageSize, or active filters change
   useEffect(() => {
     fetchHistory(page, activeFilters);
-  }, [page, activeFilters]);
+  }, [page, activeFilters, pageSize]);
 
   const handleApplyFilters = () => {
     setActiveFilters(filters);
@@ -94,6 +94,23 @@ const TradeExplore: React.FC = () => {
             
             {/* Pagination Controls */}
             <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 mr-2 text-sm text-slate-400">
+                <span>Rows per page:</span>
+                <select 
+                  className="bg-slate-800/80 border border-slate-700 text-slate-200 rounded p-1 outline-none focus:border-emerald-500 transition-colors"
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setPage(1);
+                  }}
+                >
+                  <option value={10}>10</option>
+                  <option value={30}>30</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+              </div>
+              
               <button
                 disabled={page === 1}
                 onClick={() => setPage(p => p - 1)}
