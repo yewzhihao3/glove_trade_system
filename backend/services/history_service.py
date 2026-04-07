@@ -184,6 +184,22 @@ def process_history_upload(db: Session, file: UploadFile) -> Tuple[int, int]:
                 row['ship_to_name'] = ship
                 row['ship_to_country'] = str(row.get('ship_to_country', '') or '')
                 
+                # Extract size from description
+                desc = str(row.get('description_brand', ''))
+                size_val = 'N/A'
+                if desc:
+                    size_indicators = [
+                        '-XS', '-S', '-M', '-L', '-XL', '-XXL', '-2XL', '-3XL', '-4XL',
+                        ', XS', ', S', ', M', ', L', ', XL', ', XXL',
+                        ' XS', ' S ', ' M ', ' L ', ' XL ', ' XXL ',
+                        '/XS', '/S', '/M', '/L', '/XL', '/XXL'
+                    ]
+                    for indicator in size_indicators:
+                        if indicator in desc or indicator + ' ' in desc + ' ':
+                            size_val = indicator.strip().strip(',/-')
+                            break
+                row['size'] = size_val
+                
                 new_objects.append(models.TradeHistory(**row))
                 inserted += 1
                 

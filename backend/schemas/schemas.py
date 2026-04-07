@@ -40,6 +40,7 @@ class TradeHistoryBase(BaseModel):
     ship_to_country: Optional[str] = None
     ship_to_name: Optional[str] = None
     description_brand: Optional[str] = None
+    size: Optional[str] = None
     base_uom_item: Optional[str] = None
     total_quantity_pcs: Optional[int] = None
     product_code: str
@@ -92,3 +93,32 @@ class TopProductResponse(BaseModel):
 class MonthlyTrendResponse(BaseModel):
     month: str
     total_quantity_pcs: int
+
+class TopSizeResponse(BaseModel):
+    size: str
+    total_quantity_pcs: int
+
+class TopItemResponse(BaseModel):
+    item_no: str
+    total_quantity_pcs: int
+
+class TopGroupResponse(BaseModel):
+    posting_group: str
+    total_quantity_pcs: int
+
+class TopSalespersonResponse(BaseModel):
+    salesperson: str
+    total_quantity_pcs: int
+
+class YearlyTrendResponse(BaseModel):
+    year: str
+    total_quantity_pcs: int
+
+class PotentialBuyerResponse(BaseModel):
+    company_name: str
+    country: str
+    total_orders: int
+    total_quantity_pcs: int
+    first_purchase: str
+    last_purchase: str
+    activity_period: str

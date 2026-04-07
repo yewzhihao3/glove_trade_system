@@ -40,6 +40,7 @@ class TradeHistory(Base):
     ship_to_country = Column(String, index=True)
     ship_to_name = Column(String)
     description_brand = Column(Text)
+    size = Column(String, index=True)
     base_uom_item = Column(String)
     total_quantity_pcs = Column(Integer)
     product_code = Column(String, index=True)

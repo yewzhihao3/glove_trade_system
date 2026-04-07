@@ -73,6 +73,27 @@ export interface AnalyticalResult {
   ship_to_country?: string;
   product_code?: string;
   month?: string;
+  size?: string;
+  item_no?: string;
+  posting_group?: string;
+  salesperson?: string;
+  year?: string;
+}
+
+export interface PotentialBuyer {
+  company_name: string;
+  country: string;
+  total_orders: number;
+  total_quantity_pcs: number;
+  first_purchase: string;
+  last_purchase: string;
+  activity_period: string;
+}
+
+/** Shared date-range params forwarded to all analytics API calls. */
+export interface DateParams {
+  date_from?: string | null;
+  date_to?: string | null;
 }
 
 export const leadService = {
@@ -151,28 +172,60 @@ export const tradeService = {
     return response.data;
   },
 
-  getTopBuyers: async (limit: number = 10): Promise<AnalyticalResult[]> => {
-    const response = await api.get('/analytics/top-buyers', { params: { limit } });
+  getTopBuyers: async (limit: number = 10, dates?: DateParams): Promise<AnalyticalResult[]> => {
+    const response = await api.get('/analytics/top-buyers', { params: { limit, ...dates } });
     return response.data;
   },
 
-  getTopCountries: async (limit: number = 10): Promise<AnalyticalResult[]> => {
-    const response = await api.get('/analytics/top-countries', { params: { limit } });
+  getTopCountries: async (limit: number = 10, dates?: DateParams): Promise<AnalyticalResult[]> => {
+    const response = await api.get('/analytics/top-countries', { params: { limit, ...dates } });
     return response.data;
   },
 
-  getTopProducts: async (limit: number = 10): Promise<AnalyticalResult[]> => {
-    const response = await api.get('/analytics/top-products', { params: { limit } });
+  getTopProducts: async (limit: number = 10, dates?: DateParams): Promise<AnalyticalResult[]> => {
+    const response = await api.get('/analytics/top-products', { params: { limit, ...dates } });
     return response.data;
   },
 
-  getMonthlyTrend: async (): Promise<AnalyticalResult[]> => {
-    const response = await api.get('/analytics/monthly-trend');
+  getMonthlyTrend: async (dates?: DateParams): Promise<AnalyticalResult[]> => {
+    const response = await api.get('/analytics/monthly-trend', { params: { ...dates } });
     return response.data;
   },
 
-  getCompanyTrend: async (companyName: string): Promise<AnalyticalResult[]> => {
-    const response = await api.get('/analytics/company-trend', { params: { company_name: companyName } });
+  getCompanyTrend: async (companyName: string, dates?: DateParams): Promise<AnalyticalResult[]> => {
+    const response = await api.get('/analytics/company-trend', { params: { company_name: companyName, ...dates } });
+    return response.data;
+  },
+
+  getTopSizes: async (limit: number = 10, dates?: DateParams): Promise<AnalyticalResult[]> => {
+    const response = await api.get('/analytics/top-sizes', { params: { limit, ...dates } });
+    return response.data;
+  },
+
+  getTopItems: async (limit: number = 20, dates?: DateParams): Promise<AnalyticalResult[]> => {
+    const response = await api.get('/analytics/top-items', { params: { limit, ...dates } });
+    return response.data;
+  },
+
+  getTopGroups: async (limit: number = 10, dates?: DateParams): Promise<AnalyticalResult[]> => {
+    const response = await api.get('/analytics/top-groups', { params: { limit, ...dates } });
+    return response.data;
+  },
+
+  getTopSalespeople: async (limit: number = 10, dates?: DateParams): Promise<AnalyticalResult[]> => {
+    const response = await api.get('/analytics/top-salespeople', { params: { limit, ...dates } });
+    return response.data;
+  },
+
+  getYearlyTrend: async (dates?: DateParams): Promise<AnalyticalResult[]> => {
+    const response = await api.get('/analytics/yearly-trend', { params: { ...dates } });
+    return response.data;
+  },
+
+  getPotentialBuyers: async (minTransactions: number = 1, minValue: number = 0, dates?: DateParams): Promise<PotentialBuyer[]> => {
+    const response = await api.get('/analytics/potential-buyers', { 
+      params: { min_transactions: minTransactions, min_value: minValue, ...dates } 
+    });
     return response.data;
   }
 };
