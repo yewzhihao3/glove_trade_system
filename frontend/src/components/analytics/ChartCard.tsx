@@ -9,10 +9,10 @@ interface ChartCardProps {
 
 const ChartCard: React.FC<ChartCardProps> = ({ title, description, children, isLoading = false }) => {
   return (
-    <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-700/50 rounded-xl p-6 flex flex-col h-full shadow-xl">
+    <div className="bg-white dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200 dark:border-slate-700/50 rounded-xl p-6 flex flex-col h-full shadow-sm dark:shadow-xl">
       <div className="mb-4">
-        <h3 className="text-lg font-semibold text-slate-100">{title}</h3>
-        {description && <p className="text-sm text-slate-400 mt-1">{description}</p>}
+        <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">{title}</h3>
+        {description && <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{description}</p>}
       </div>
       <div className="flex-1 relative min-h-[300px]">
         {isLoading ? (

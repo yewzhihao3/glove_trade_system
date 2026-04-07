@@ -154,23 +154,23 @@ export default function TradeInsights() {
 
     if (activeMetric === 'potential-buyers') {
       return (
-        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden mt-4 transition-opacity duration-300" style={{ opacity: loading ? 0.6 : 1 }}>
-          <div className="p-4 bg-slate-800/80 border-b border-slate-700 flex flex-wrap items-center gap-4">
-            <Filter className="w-5 h-5 text-slate-400" />
+        <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-xl overflow-hidden mt-4 transition-opacity duration-300 shadow-sm dark:shadow-none" style={{ opacity: loading ? 0.6 : 1 }}>
+          <div className="p-4 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 flex flex-wrap items-center gap-4">
+            <Filter className="w-5 h-5 text-slate-500 dark:text-slate-400" />
             <div className="flex items-center gap-2">
-              <span className="text-sm text-slate-300">Min. Transactions:</span>
+              <span className="text-sm text-slate-700 dark:text-slate-300">Min. Transactions:</span>
               <input
                 type="number" min="1"
-                className="bg-slate-900 border border-slate-700 text-slate-200 rounded px-2 py-1 w-20 text-sm outline-none focus:border-emerald-500 transition-colors"
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded px-2 py-1 w-20 text-sm outline-none focus:border-emerald-500 transition-colors"
                 value={minTransactions}
                 onChange={(e) => setMinTransactions(Number(e.target.value) || 1)}
               />
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-slate-300">Min. Total Qty:</span>
+              <span className="text-sm text-slate-700 dark:text-slate-300">Min. Total Qty:</span>
               <input
                 type="number" min="0"
-                className="bg-slate-900 border border-slate-700 text-slate-200 rounded px-2 py-1 w-24 text-sm outline-none focus:border-emerald-500 transition-colors"
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded px-2 py-1 w-24 text-sm outline-none focus:border-emerald-500 transition-colors"
                 value={minValue}
                 onChange={(e) => setMinValue(Number(e.target.value) || 0)}
               />
@@ -179,27 +179,27 @@ export default function TradeInsights() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse whitespace-nowrap">
               <thead>
-                <tr className="bg-slate-800 text-emerald-400 text-sm font-semibold uppercase tracking-wider">
-                  <th className="p-4 border-b border-slate-700">Company Name</th>
-                  <th className="p-4 border-b border-slate-700">Country</th>
-                  <th className="p-4 border-b border-slate-700">Orders</th>
-                  <th className="p-4 border-b border-slate-700">Total Quantity</th>
-                  <th className="p-4 border-b border-slate-700">Activity Period</th>
+                <tr className="bg-slate-50 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 text-sm font-semibold uppercase tracking-wider">
+                  <th className="p-4 border-b border-slate-200 dark:border-slate-700">Company Name</th>
+                  <th className="p-4 border-b border-slate-200 dark:border-slate-700">Country</th>
+                  <th className="p-4 border-b border-slate-200 dark:border-slate-700">Orders</th>
+                  <th className="p-4 border-b border-slate-200 dark:border-slate-700">Total Quantity</th>
+                  <th className="p-4 border-b border-slate-200 dark:border-slate-700">Activity Period</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-700/50 text-sm">
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-700/50 text-sm">
                 {potentialBuyers.length > 0 ? (
                   potentialBuyers.map((pb, idx) => (
-                    <tr key={idx} className="hover:bg-slate-800/40 transition-colors text-slate-200">
+                    <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors text-slate-700 dark:text-slate-200">
                       <td className="p-4 max-w-[200px] truncate" title={pb.company_name}>{pb.company_name}</td>
                       <td className="p-4">{pb.country}</td>
-                      <td className="p-4 text-emerald-400 font-medium">{pb.total_orders}</td>
+                      <td className="p-4 text-emerald-600 dark:text-emerald-400 font-medium">{pb.total_orders}</td>
                       <td className="p-4">{pb.total_quantity_pcs.toLocaleString()} PCS</td>
                       <td className="p-4">
                         <span className={`px-2 py-1 rounded text-xs font-semibold ${
                           pb.activity_period.includes('Recent')
-                            ? 'bg-emerald-500/20 text-emerald-400'
-                            : 'bg-slate-700 text-slate-300'
+                            ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                            : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
                         }`}>
                           {pb.activity_period}
                         </span>
@@ -208,7 +208,7 @@ export default function TradeInsights() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-slate-400">
+                    <td colSpan={5} className="p-8 text-center text-slate-500 dark:text-slate-400">
                       {loading ? 'Loading…' : 'No buyers match the current criteria.'}
                     </td>
                   </tr>
@@ -293,11 +293,11 @@ export default function TradeInsights() {
       {/* ── Header ─────────────────────────────────────────────────── */}
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-100 font-outfit mb-2 flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 font-outfit mb-2 flex items-center gap-3">
             <Lightbulb className="w-8 h-8 text-amber-500" />
             Data Analysis Explorer
           </h1>
-          <p className="text-slate-400">Deep aggregated analytics to uncover strategic advantages.</p>
+          <p className="text-slate-600 dark:text-slate-400">Deep aggregated analytics to uncover strategic advantages.</p>
         </div>
         <button
           onClick={handleExport}
@@ -309,15 +309,15 @@ export default function TradeInsights() {
       </div>
 
       {/* ── Tabs ───────────────────────────────────────────────────── */}
-      <div className="flex overflow-x-auto scrollbar-hide mb-6 border-b border-slate-700/50">
+      <div className="flex overflow-x-auto scrollbar-hide mb-6 border-b border-slate-200 dark:border-slate-700/50">
         {TABS.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`px-6 py-3 font-medium whitespace-nowrap transition-colors border-b-2 ${
               activeTab === tab.id
-                ? 'border-emerald-500 text-emerald-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
             }`}
           >
             {tab.label}
@@ -326,7 +326,7 @@ export default function TradeInsights() {
       </div>
 
       {/* ── Filter bar: Date Range + Metric selector ────────────────── */}
-      <div className="bg-slate-800/40 p-4 rounded-xl border border-slate-700/50 mb-6 flex flex-wrap items-center gap-6">
+      <div className="bg-white dark:bg-slate-800/40 p-4 rounded-xl border border-slate-200 dark:border-slate-700/50 mb-6 flex flex-wrap items-center gap-6 shadow-sm dark:shadow-none">
 
         {/* Date Range Picker */}
         <DateRangePicker
@@ -335,18 +335,18 @@ export default function TradeInsights() {
         />
 
         {/* Divider */}
-        <div className="h-6 w-px bg-slate-700 hidden md:block" />
+        <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 hidden md:block" />
 
         {/* Metric selector */}
         <div className="flex items-center gap-3">
-          <span className="text-sm text-slate-400 whitespace-nowrap">Select Metric:</span>
+          <span className="text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap">Select Metric:</span>
           <select
             value={activeMetric}
             onChange={(e) => setActiveMetric(e.target.value)}
-            className="bg-slate-900 border border-slate-700 text-slate-200 px-3 py-2 rounded-lg text-sm outline-none focus:border-emerald-500 cursor-pointer shadow-inner w-48 md:w-64"
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 px-3 py-2 rounded-lg text-sm outline-none focus:border-emerald-500 cursor-pointer shadow-inner w-48 md:w-64"
           >
             {TABS.find(t => t.id === activeTab)?.metrics.map(m => (
-              <option key={m.value} value={m.value}>{m.label}</option>
+              <option key={m.value} value={m.value} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200">{m.label}</option>
             ))}
           </select>
         </div>

@@ -46,20 +46,20 @@ const TradeDashboard: React.FC = () => {
   const formatNumber = (num: number) => new Intl.NumberFormat('en-US', { notation: 'compact' }).format(num);
 
   const kpis = [
-    { label: 'Total Volume (PCS)', value: formatNumber(totalVolume), icon: TrendingUp, color: 'text-emerald-400' },
-    { label: 'Top Buyer', value: topBuyers[0]?.company_name || 'N/A', icon: Users, color: 'text-blue-400' },
-    { label: 'Top Country', value: topCountries[0]?.ship_to_country || 'N/A', icon: Globe, color: 'text-purple-400' },
-    { label: 'Top Product', value: topProducts[0]?.product_code || 'N/A', icon: Package, color: 'text-amber-400' },
+    { label: 'Total Volume (PCS)', value: formatNumber(totalVolume), icon: TrendingUp, color: 'text-emerald-600 dark:text-emerald-400' },
+    { label: 'Top Buyer', value: topBuyers[0]?.company_name || 'N/A', icon: Users, color: 'text-blue-600 dark:text-blue-400' },
+    { label: 'Top Country', value: topCountries[0]?.ship_to_country || 'N/A', icon: Globe, color: 'text-purple-600 dark:text-purple-400' },
+    { label: 'Top Product', value: topProducts[0]?.product_code || 'N/A', icon: Package, color: 'text-amber-600 dark:text-amber-400' },
   ];
 
   return (
     <div className="h-full flex flex-col relative z-10 scroll-smooth">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-100 font-outfit mb-2 group flex items-center gap-3">
-          <TrendingUp className="w-8 h-8 text-emerald-500 group-hover:rotate-12 transition-transform" />
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 font-outfit mb-2 group flex items-center gap-3">
+          <TrendingUp className="w-8 h-8 text-emerald-600 dark:text-emerald-500 group-hover:rotate-12 transition-transform" />
           Analytics Dashboard
         </h1>
-        <p className="text-slate-400">High-level overview of global trade operations and performance metrics.</p>
+        <p className="text-slate-600 dark:text-slate-400">High-level overview of global trade operations and performance metrics.</p>
       </div>
 
       {/* KPI Row */}
@@ -67,13 +67,13 @@ const TradeDashboard: React.FC = () => {
         {kpis.map((kpi, idx) => {
           const Icon = kpi.icon;
           return (
-            <div key={idx} className="bg-slate-900/50 backdrop-blur-xl border border-slate-700/50 rounded-xl p-6 shadow-lg flex items-start gap-4">
-              <div className={`p-3 rounded-lg bg-slate-800 border border-slate-700/50 ${kpi.color}`}>
+            <div key={idx} className="bg-white dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200 dark:border-slate-700/50 rounded-xl p-6 shadow-sm dark:shadow-lg flex items-start gap-4">
+              <div className={`p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 ${kpi.color}`}>
                 <Icon className="w-6 h-6" />
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-1">{kpi.label}</p>
-                <p className="text-2xl font-bold text-slate-100">{kpi.value.length > 20 ? kpi.value.substring(0, 17) + '...' : kpi.value}</p>
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">{kpi.label}</p>
+                <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{kpi.value.length > 20 ? kpi.value.substring(0, 17) + '...' : kpi.value}</p>
               </div>
             </div>
           );

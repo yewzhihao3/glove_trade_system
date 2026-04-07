@@ -178,7 +178,7 @@ export default function SearchableSelect({
             width: dropPos.width,
             zIndex: 9999,
           }}
-          className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl shadow-black/60 overflow-hidden"
+          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl shadow-black/10 dark:shadow-black/60 overflow-hidden"
         >
           {loading ? (
             <div className="flex items-center gap-2 px-3 py-3 text-xs text-slate-500">
@@ -188,7 +188,7 @@ export default function SearchableSelect({
           ) : options.length === 0 ? (
             <div className="px-3 py-3 text-xs text-slate-500">
               {allowCustomInput && inputValue
-                ? <>Press <kbd className="px-1 py-0.5 bg-slate-800 rounded text-slate-400">Enter</kbd> to use "{inputValue}"</>
+                ? <>Press <kbd className="px-1 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-500 dark:text-slate-400">Enter</kbd> to use "{inputValue}"</>
                 : 'No results found'}
             </div>
           ) : (
@@ -199,8 +199,8 @@ export default function SearchableSelect({
                   onMouseDown={() => handleSelect(opt)}
                   className={`px-3 py-2 text-sm cursor-pointer transition-colors ${
                     i === activeIdx
-                      ? 'bg-emerald-600/20 text-emerald-300'
-                      : 'text-slate-200 hover:bg-slate-800'
+                      ? 'bg-emerald-50 dark:bg-emerald-600/20 text-emerald-600 dark:text-emerald-300'
+                      : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
                 >
                   <HighlightMatch text={opt} query={inputValue} />
@@ -228,7 +228,7 @@ export default function SearchableSelect({
           disabled={disabled}
           placeholder={placeholder}
           autoComplete="off"
-          className="w-full bg-slate-900/70 border border-slate-700 text-slate-200 placeholder:text-slate-600 px-3 py-2 pr-9 rounded-lg text-sm outline-none focus:border-emerald-500 transition-colors disabled:opacity-50"
+          className="w-full bg-white dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600 px-3 py-2 pr-9 rounded-lg text-sm outline-none focus:border-emerald-500 dark:focus:border-emerald-500 transition-colors disabled:opacity-50"
         />
         <span className="absolute right-2.5 flex items-center">
           {loading ? (
@@ -237,13 +237,13 @@ export default function SearchableSelect({
             <button
               type="button"
               onMouseDown={handleClear}
-              className="text-slate-500 hover:text-rose-400 transition-colors p-0.5"
+              className="text-slate-400 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 transition-colors p-0.5"
               tabIndex={-1}
             >
               <X className="w-3.5 h-3.5" />
             </button>
           ) : (
-            <ChevronDown className="w-3.5 h-3.5 text-slate-600 pointer-events-none" />
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 dark:text-slate-600 pointer-events-none" />
           )}
         </span>
       </div>

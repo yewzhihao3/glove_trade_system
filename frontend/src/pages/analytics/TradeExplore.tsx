@@ -65,11 +65,11 @@ const TradeExplore: React.FC = () => {
     <div className="h-full flex flex-col relative z-10 scroll-smooth">
       <div className="mb-6 flex justify-between items-end">
         <div>
-          <h1 className="text-3xl font-bold text-slate-100 font-outfit mb-2 flex items-center gap-3">
-            <Database className="w-8 h-8 text-emerald-500" />
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 font-outfit mb-2 flex items-center gap-3">
+            <Database className="w-8 h-8 text-emerald-600 dark:text-emerald-500" />
             Data Explorer
           </h1>
-          <p className="text-slate-400">Deep dive into millions of raw trade history records.</p>
+          <p className="text-slate-600 dark:text-slate-400">Deep dive into millions of raw trade history records.</p>
         </div>
       </div>
 
@@ -85,19 +85,19 @@ const TradeExplore: React.FC = () => {
         </div>
 
         {/* Table Area */}
-        <div className="flex-1 flex flex-col min-w-0 bg-slate-900/50 backdrop-blur-xl border border-slate-700/50 rounded-xl overflow-hidden shadow-xl">
+        <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200 dark:border-slate-700/50 rounded-xl overflow-hidden shadow-sm dark:shadow-xl">
           
-          <div className="p-4 border-b border-slate-700/50 flex justify-between items-center bg-slate-800/30">
-            <h3 className="text-slate-200 font-medium">
-              Showing {data.length > 0 ? ((page - 1) * pageSize) + 1 : 0} - {Math.min(page * pageSize, total)} of <span className="text-emerald-400 font-bold">{total}</span> records
+          <div className="p-4 border-b border-slate-200 dark:border-slate-700/50 flex justify-between items-center bg-slate-50 dark:bg-slate-800/30">
+            <h3 className="text-slate-800 dark:text-slate-200 font-medium">
+              Showing {data.length > 0 ? ((page - 1) * pageSize) + 1 : 0} - {Math.min(page * pageSize, total)} of <span className="text-emerald-600 dark:text-emerald-400 font-bold">{total}</span> records
             </h3>
             
             {/* Pagination Controls */}
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 mr-2 text-sm text-slate-400">
+              <div className="flex items-center gap-2 mr-2 text-sm text-slate-500 dark:text-slate-400">
                 <span>Rows per page:</span>
                 <select 
-                  className="bg-slate-800/80 border border-slate-700 text-slate-200 rounded p-1 outline-none focus:border-emerald-500 transition-colors"
+                  className="bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded p-1 outline-none focus:border-emerald-500 transition-colors"
                   value={pageSize}
                   onChange={(e) => {
                     setPageSize(Number(e.target.value));
@@ -114,17 +114,17 @@ const TradeExplore: React.FC = () => {
               <button
                 disabled={page === 1}
                 onClick={() => setPage(p => p - 1)}
-                className="p-2 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <span className="text-sm text-slate-400">
-                Page <span className="text-slate-200">{page}</span> of {totalPages || 1}
+              <span className="text-sm text-slate-500 dark:text-slate-400">
+                Page <span className="text-slate-800 dark:text-slate-200">{page}</span> of {totalPages || 1}
               </span>
               <button
                 disabled={page >= totalPages}
                 onClick={() => setPage(p => p + 1)}
-                className="p-2 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -133,13 +133,13 @@ const TradeExplore: React.FC = () => {
 
           <div className="flex-1 overflow-auto custom-scrollbar relative">
             {loading && (
-              <div className="absolute inset-0 z-10 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center">
+              <div className="absolute inset-0 z-10 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm flex items-center justify-center">
                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
               </div>
             )}
             
             <table className="w-full text-sm text-left">
-              <thead className="text-xs text-slate-400 uppercase bg-slate-900/80 sticky top-0 z-0">
+              <thead className="text-xs text-slate-500 dark:text-slate-400 uppercase bg-slate-50 dark:bg-slate-900/80 sticky top-0 z-0">
                 <tr>
                   <th className="px-6 py-4 font-medium whitespace-nowrap">Date</th>
                   <th className="px-6 py-4 font-medium">Company</th>
@@ -151,7 +151,7 @@ const TradeExplore: React.FC = () => {
                   <th className="px-6 py-4 font-medium">Description</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-700/50">
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-700/50">
                 {data.length === 0 && !loading ? (
                   <tr>
                     <td colSpan={8} className="px-6 py-12 text-center text-slate-500">
@@ -160,15 +160,15 @@ const TradeExplore: React.FC = () => {
                   </tr>
                 ) : (
                   data.map((row) => (
-                    <tr key={row.id} className="hover:bg-slate-800/40 transition-colors">
-                      <td className="px-6 py-4 text-slate-300 whitespace-nowrap">{row.posting_date}</td>
-                      <td className="px-6 py-4 font-medium text-emerald-400">{row.company_name}</td>
-                      <td className="px-6 py-4 text-slate-300 whitespace-nowrap">{row.product_code}</td>
-                      <td className="px-6 py-4 text-slate-300 whitespace-nowrap">{row.item_no}</td>
-                      <td className="px-6 py-4 text-slate-300 text-right font-mono">{row.total_quantity_pcs.toLocaleString()}</td>
-                      <td className="px-6 py-4 text-slate-300">{row.ship_to_country}</td>
-                      <td className="px-6 py-4 text-slate-400 whitespace-nowrap">{row.invoice_no}</td>
-                      <td className="px-6 py-4 text-slate-400 break-words max-w-[200px]" title={row.description_brand}>{row.description_brand}</td>
+                    <tr key={row.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="px-6 py-4 text-slate-600 dark:text-slate-300 whitespace-nowrap">{row.posting_date}</td>
+                      <td className="px-6 py-4 font-medium text-emerald-600 dark:text-emerald-400">{row.company_name}</td>
+                      <td className="px-6 py-4 text-slate-600 dark:text-slate-300 whitespace-nowrap">{row.product_code}</td>
+                      <td className="px-6 py-4 text-slate-600 dark:text-slate-300 whitespace-nowrap">{row.item_no}</td>
+                      <td className="px-6 py-4 text-slate-600 dark:text-slate-300 text-right font-mono">{row.total_quantity_pcs.toLocaleString()}</td>
+                      <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{row.ship_to_country}</td>
+                      <td className="px-6 py-4 text-slate-500 dark:text-slate-400 whitespace-nowrap">{row.invoice_no}</td>
+                      <td className="px-6 py-4 text-slate-500 dark:text-slate-400 break-words max-w-[200px]" title={row.description_brand}>{row.description_brand}</td>
                     </tr>
                   ))
                 )}

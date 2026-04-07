@@ -235,8 +235,8 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                 <div className="mt-auto">
                     <div className="glass rounded-3xl p-6 border border-black/5 dark:border-white/5 space-y-6">
                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-black/10 dark:border-white/10 flex items-center justify-center overflow-hidden shadow-inner">
-                                <User className="w-6 h-6 text-slate-500 dark:text-slate-400" />
+                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 border border-slate-200 dark:border-white/10 flex items-center justify-center overflow-hidden shadow-inner font-outfit">
+                                <User className="w-6 h-6 text-slate-400 dark:text-slate-500" />
                             </div>
                             <div className="flex-1 overflow-hidden">
                                 <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">

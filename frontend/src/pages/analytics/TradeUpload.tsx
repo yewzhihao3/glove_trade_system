@@ -70,10 +70,10 @@ const TradeUpload: React.FC = () => {
   return (
     <div className="h-full flex flex-col relative z-10 max-w-4xl mx-auto py-12">
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold text-slate-100 font-outfit mb-4">
+        <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-100 font-outfit mb-4">
           Data Pipeline Ingestion
         </h1>
-        <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+        <p className="text-slate-600 dark:text-slate-400 text-lg max-w-2xl mx-auto">
           Upload bulk Excel or CSV shipment records. Our engine automatically parses columns, maps aliased fields, and scrubs duplicate shipments securely into the database.
         </p>
       </div>
@@ -87,20 +87,20 @@ const TradeUpload: React.FC = () => {
 
       {result && (
         <div className="mb-6 animate-in fade-in slide-in-from-top-4 duration-500">
-          <div className="p-6 bg-emerald-500/10 border border-emerald-500/50 rounded-xl text-center">
+          <div className="p-6 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/50 rounded-xl text-center">
             <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-emerald-400 mb-2">Upload Complete!</h3>
-            <p className="text-slate-300 mb-4">{result.message}</p>
+            <h3 className="text-xl font-bold text-emerald-600 dark:text-emerald-400 mb-2">Upload Complete!</h3>
+            <p className="text-slate-700 dark:text-slate-300 mb-4">{result.message}</p>
             
             <div className="flex justify-center gap-8">
               <div className="text-center">
-                <p className="text-3xl font-mono font-bold text-slate-100">{result.inserted.toLocaleString()}</p>
-                <p className="text-xs font-medium text-emerald-500 uppercase tracking-wider">New Records</p>
+                <p className="text-3xl font-mono font-bold text-slate-900 dark:text-slate-100">{result.inserted.toLocaleString()}</p>
+                <p className="text-xs font-medium text-emerald-600 dark:text-emerald-500 uppercase tracking-wider">New Records</p>
               </div>
-              <div className="w-px bg-slate-700/50"></div>
+              <div className="w-px bg-slate-200 dark:bg-slate-700/50"></div>
               <div className="text-center">
-                <p className="text-3xl font-mono font-bold text-slate-100">{result.skipped.toLocaleString()}</p>
-                <p className="text-xs font-medium text-amber-500 uppercase tracking-wider">Duplicates Skipped</p>
+                <p className="text-3xl font-mono font-bold text-slate-900 dark:text-slate-100">{result.skipped.toLocaleString()}</p>
+                <p className="text-xs font-medium text-amber-600 dark:text-amber-500 uppercase tracking-wider">Duplicates Skipped</p>
               </div>
             </div>
           </div>
@@ -108,18 +108,18 @@ const TradeUpload: React.FC = () => {
       )}
 
       <div 
-        className={`bg-slate-900/50 backdrop-blur-xl border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300 ${isDragOver ? 'border-emerald-500 bg-emerald-500/5' : 'border-slate-700/50 hover:border-slate-600'}`}
+        className={`bg-white dark:bg-slate-900/50 backdrop-blur-xl border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300 ${isDragOver ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/5' : 'border-slate-300 dark:border-slate-700/50 hover:border-slate-400 dark:hover:border-slate-600'}`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
         {files.length === 0 ? (
           <div className="flex flex-col items-center">
-            <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mb-6">
+            <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6">
               <UploadCloud className="w-10 h-10 text-emerald-500" />
             </div>
-            <h3 className="text-xl font-semibold text-slate-200 mb-2">Drag and drop your file here</h3>
-            <p className="text-slate-400 mb-8">Supported formats: .csv, .xls, .xlsx (Max 100MB)</p>
+            <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-200 mb-2">Drag and drop your file here</h3>
+            <p className="text-slate-500 dark:text-slate-400 mb-8">Supported formats: .csv, .xls, .xlsx (Max 100MB)</p>
             
             <input 
               type="file" 
@@ -131,7 +131,7 @@ const TradeUpload: React.FC = () => {
             />
             <button 
               onClick={() => fileInputRef.current?.click()}
-              className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg font-medium transition-colors border border-slate-700"
+              className="px-6 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg font-medium transition-colors border border-slate-200 dark:border-slate-700"
             >
               Browse Files
             </button>
@@ -139,10 +139,10 @@ const TradeUpload: React.FC = () => {
         ) : (
           <div className="flex flex-col items-center">
             <FileSpreadsheet className="w-16 h-16 text-emerald-500 mb-4" />
-            <h3 className="text-xl font-semibold text-slate-100 mb-1">
+            <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-1">
               {files.length === 1 ? files[0].name : `${files.length} files selected`}
             </h3>
-            <p className="text-slate-400 mb-8">
+            <p className="text-slate-600 dark:text-slate-400 mb-8">
               ({(files.reduce((acc, f) => acc + f.size, 0) / 1024 / 1024).toFixed(2)} MB total)
             </p>
             
@@ -150,7 +150,7 @@ const TradeUpload: React.FC = () => {
               <button 
                 onClick={handleCancel}
                 disabled={isUploading}
-                className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg font-medium transition-colors border border-slate-700 disabled:opacity-50"
+                className="px-6 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-medium transition-colors border border-slate-200 dark:border-slate-700 disabled:opacity-50"
               >
                 Cancel
               </button>

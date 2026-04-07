@@ -73,10 +73,10 @@ export default function DateRangePicker({
         <select
           value={value.preset}
           onChange={(e) => handlePresetChange(e.target.value as DatePreset)}
-          className="w-full bg-slate-900/70 border border-slate-700 text-slate-200 px-3 py-2 rounded-lg text-sm outline-none focus:border-emerald-500 transition-colors cursor-pointer"
+          className="w-full bg-white dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200 px-3 py-2 rounded-lg text-sm outline-none focus:border-emerald-500 transition-colors cursor-pointer"
         >
           {PRESETS.filter(p => allowCustom || p.id !== 'custom').map(p => (
-            <option key={p.id} value={p.id}>{p.label}</option>
+            <option key={p.id} value={p.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200">{p.label}</option>
           ))}
         </select>
 
@@ -92,7 +92,7 @@ export default function DateRangePicker({
                   setLocalFrom(e.target.value);
                   onChange({ preset: 'custom', dateFrom: e.target.value || null, dateTo: localTo || null });
                 }}
-                className="w-full bg-slate-900/70 border border-slate-700 text-slate-200 px-3 py-2 rounded-lg text-sm outline-none focus:border-emerald-500 transition-colors"
+                className="w-full bg-white dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200 px-3 py-2 rounded-lg text-sm outline-none focus:border-emerald-500 transition-colors"
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -104,7 +104,7 @@ export default function DateRangePicker({
                   setLocalTo(e.target.value);
                   onChange({ preset: 'custom', dateFrom: localFrom || null, dateTo: e.target.value || null });
                 }}
-                className="w-full bg-slate-900/70 border border-slate-700 text-slate-200 px-3 py-2 rounded-lg text-sm outline-none focus:border-emerald-500 transition-colors"
+                className="w-full bg-white dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200 px-3 py-2 rounded-lg text-sm outline-none focus:border-emerald-500 transition-colors"
               />
             </div>
           </div>
@@ -112,7 +112,7 @@ export default function DateRangePicker({
 
         {/* Resolved date hint for presets */}
         {value.preset !== 'custom' && value.dateFrom && value.dateTo && (
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-slate-500 dark:text-slate-400">
             {value.dateFrom} → {value.dateTo}
           </span>
         )}
@@ -128,14 +128,14 @@ export default function DateRangePicker({
       <CalendarDays className="w-5 h-5 text-slate-400 shrink-0" />
 
       <div className="flex items-center gap-2">
-        <span className="text-sm text-slate-400 whitespace-nowrap">Date Range:</span>
+        <span className="text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">Date Range:</span>
         <select
           value={value.preset}
           onChange={(e) => handlePresetChange(e.target.value as DatePreset)}
-          className="bg-slate-900 border border-slate-700 text-slate-200 px-3 py-2 rounded-lg text-sm outline-none focus:border-emerald-500 transition-colors cursor-pointer"
+          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200 px-3 py-2 rounded-lg text-sm outline-none focus:border-emerald-500 transition-colors cursor-pointer"
         >
           {PRESETS.filter(p => allowCustom || p.id !== 'custom').map(p => (
-            <option key={p.id} value={p.id}>{p.label}</option>
+            <option key={p.id} value={p.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200">{p.label}</option>
           ))}
         </select>
       </div>
@@ -150,7 +150,7 @@ export default function DateRangePicker({
                 setLocalFrom(e.target.value);
                 onChange({ preset: 'custom', dateFrom: e.target.value || null, dateTo: localTo || null });
               }}
-              className="flex-1 bg-slate-900 border border-slate-700 text-slate-200 px-3 py-2 rounded-lg text-sm outline-none focus:border-emerald-500 transition-colors"
+              className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200 px-3 py-2 rounded-lg text-sm outline-none focus:border-emerald-500 transition-colors"
             />
             <span className="text-slate-500 text-sm shrink-0">to</span>
             <input
@@ -160,14 +160,14 @@ export default function DateRangePicker({
                 setLocalTo(e.target.value);
                 onChange({ preset: 'custom', dateFrom: localFrom || null, dateTo: e.target.value || null });
               }}
-              className="flex-1 bg-slate-900 border border-slate-700 text-slate-200 px-3 py-2 rounded-lg text-sm outline-none focus:border-emerald-500 transition-colors"
+              className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200 px-3 py-2 rounded-lg text-sm outline-none focus:border-emerald-500 transition-colors"
             />
           </div>
         </div>
       )}
 
       {value.preset !== 'custom' && value.dateFrom && value.dateTo && (
-        <span className="text-xs text-slate-500 whitespace-nowrap">
+        <span className="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
           {value.dateFrom} → {value.dateTo}
         </span>
       )}

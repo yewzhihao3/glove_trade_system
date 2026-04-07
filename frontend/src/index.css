@@ -85,6 +85,11 @@ body {
 
 /* Fix for browser default light-mode overrides in select */
 select option {
+  background-color: #ffffff;
+  color: #1e293b;
+}
+
+.dark select option {
   background-color: #020617;
   color: #94a3b8;
 }
