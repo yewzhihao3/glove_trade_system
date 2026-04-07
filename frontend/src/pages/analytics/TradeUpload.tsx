@@ -4,15 +4,15 @@ import { UploadCloud, CheckCircle2, AlertTriangle, FileSpreadsheet } from 'lucid
 
 const TradeUpload: React.FC = () => {
   const [isDragOver, setIsDragOver] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [result, setResult] = useState<{ inserted: number; skipped: number; message: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+    if (e.target.files && e.target.files.length > 0) {
+      setFiles(Array.from(e.target.files));
       setResult(null);
       setError(null);
     }
@@ -30,27 +30,27 @@ const TradeUpload: React.FC = () => {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setFile(e.dataTransfer.files[0]);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      setFiles(Array.from(e.dataTransfer.files));
       setResult(null);
       setError(null);
     }
   };
 
   const handleUpload = async () => {
-    if (!file) return;
+    if (files.length === 0) return;
     setIsUploading(true);
     setError(null);
     setResult(null);
 
     try {
-      const response = await tradeService.uploadHistory(file);
+      const response = await tradeService.uploadHistory(files);
       setResult({
         inserted: response.inserted_rows,
         skipped: response.skipped_rows,
         message: response.message
       });
-      setFile(null); // Reset after success
+      setFiles([]); // Reset after success
       if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (err: any) {
       console.error(err);
@@ -61,7 +61,7 @@ const TradeUpload: React.FC = () => {
   };
 
   const handleCancel = () => {
-    setFile(null);
+    setFiles([]);
     setError(null);
     setResult(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -113,7 +113,7 @@ const TradeUpload: React.FC = () => {
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
-        {!file ? (
+        {files.length === 0 ? (
           <div className="flex flex-col items-center">
             <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mb-6">
               <UploadCloud className="w-10 h-10 text-emerald-500" />
@@ -126,6 +126,7 @@ const TradeUpload: React.FC = () => {
               ref={fileInputRef} 
               onChange={handleFileChange} 
               accept=".csv, .xls, .xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" 
+              multiple
               className="hidden" 
             />
             <button 
@@ -138,8 +139,12 @@ const TradeUpload: React.FC = () => {
         ) : (
           <div className="flex flex-col items-center">
             <FileSpreadsheet className="w-16 h-16 text-emerald-500 mb-4" />
-            <h3 className="text-xl font-semibold text-slate-100 mb-1">{file.name}</h3>
-            <p className="text-slate-400 mb-8">({(file.size / 1024 / 1024).toFixed(2)} MB)</p>
+            <h3 className="text-xl font-semibold text-slate-100 mb-1">
+              {files.length === 1 ? files[0].name : `${files.length} files selected`}
+            </h3>
+            <p className="text-slate-400 mb-8">
+              ({(files.reduce((acc, f) => acc + f.size, 0) / 1024 / 1024).toFixed(2)} MB total)
+            </p>
             
             <div className="flex gap-4">
               <button 

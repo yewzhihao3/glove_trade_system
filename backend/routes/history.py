@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query, UploadFile, File, BackgroundTasks
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import Optional, List
 from database import get_db
 from schemas import schemas
 from services.history_service import get_paginated_history, process_history_upload
@@ -46,14 +46,20 @@ def get_history(
 
 @router.post("/upload", response_model=schemas.UploadHistoryResponse)
 def upload_history(
-    file: UploadFile = File(...),
+    files: List[UploadFile] = File(...),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    inserted, skipped = process_history_upload(db, file)
+    total_inserted = 0
+    total_skipped = 0
+    for file in files:
+        inserted, skipped = process_history_upload(db, file)
+        total_inserted += inserted
+        total_skipped += skipped
+        
     return {
-        "inserted_rows": inserted,
-        "skipped_rows": skipped,
-        "message": f"Successfully processed file. Inserted: {inserted}, Skipped duplicates: {skipped}"
+        "inserted_rows": total_inserted,
+        "skipped_rows": total_skipped,
+        "message": f"Successfully processed {len(files)} file(s). Inserted: {total_inserted}, Skipped duplicates: {total_skipped}"
     }
 

@@ -142,9 +142,9 @@ export const tradeService = {
     return response.data;
   },
 
-  uploadHistory: async (file: File): Promise<UploadHistoryResponse> => {
+  uploadHistory: async (files: File[]): Promise<UploadHistoryResponse> => {
     const formData = new FormData();
-    formData.append('file', file);
+    files.forEach(file => formData.append('files', file));
     const response = await api.post('/history/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
