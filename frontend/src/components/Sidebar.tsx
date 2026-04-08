@@ -42,8 +42,8 @@ const SubSidebarItem = ({ label, to, active, onClick, icon: Icon }: { label: str
 const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     const location = useLocation();
     const [isHSMenuOpen, setIsHSMenuOpen] = useState(location.pathname.startsWith('/hscodes'));
-    const [isLeadMenuOpen, setIsLeadMenuOpen] = useState(location.pathname === '/' || location.pathname === '/leads');
-    const [isAnalyticsMenuOpen, setIsAnalyticsMenuOpen] = useState(location.pathname.startsWith('/analytics'));
+    const [isLeadMenuOpen, setIsLeadMenuOpen] = useState(location.pathname === '/leads' || (location.pathname === '/' && false)); // Adjusted for new default
+    const [isAnalyticsMenuOpen, setIsAnalyticsMenuOpen] = useState(location.pathname.startsWith('/analytics') || location.pathname === '/');
     const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(location.pathname.startsWith('/settings'));
     const { logout, user } = useAuth();
 
@@ -76,6 +76,64 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                 </div>
 
                 <nav className="flex flex-col gap-2">
+                    {/* 1. Trade Analytics */}
+                    <div className="flex flex-col gap-1">
+                        <button
+                            onClick={() => setIsAnalyticsMenuOpen(!isAnalyticsMenuOpen)}
+                            className="w-full text-left"
+                        >
+                            <SidebarItem
+                                icon={BookOpen}
+                                label="Trade Analytics"
+                                to="/analytics/dashboard"
+                                active={location.pathname.startsWith('/analytics') || location.pathname === '/'}
+                                hasSubmenu
+                                isOpen={isAnalyticsMenuOpen}
+                            />
+                        </button>
+                        
+                        {isAnalyticsMenuOpen && (
+                            <div className="flex flex-col gap-1 py-1 animate-in slide-in-from-top-2 duration-300">
+                                <SubSidebarItem
+                                    icon={LayoutDashboard}
+                                    label="Dashboard"
+                                    to="/analytics/dashboard"
+                                    active={location.pathname === '/analytics/dashboard' || location.pathname === '/'}
+                                    onClick={onClose}
+                                />
+                                <SubSidebarItem
+                                    icon={Database}
+                                    label="Data Explore"
+                                    to="/analytics/explore"
+                                    active={location.pathname === '/analytics/explore'}
+                                    onClick={onClose}
+                                />
+                                <SubSidebarItem
+                                    icon={Search}
+                                    label="Insights"
+                                    to="/analytics/insights"
+                                    active={location.pathname === '/analytics/insights'}
+                                    onClick={onClose}
+                                />
+                                <SubSidebarItem
+                                    icon={Target}
+                                    label="Buyer Finder"
+                                    to="/analytics/buyers"
+                                    active={location.pathname === '/analytics/buyers'}
+                                    onClick={onClose}
+                                />
+                                <SubSidebarItem
+                                    icon={FileSearch}
+                                    label="Data Upload"
+                                    to="/analytics/upload"
+                                    active={location.pathname === '/analytics/upload'}
+                                    onClick={onClose}
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 2. HS Code Intel */}
                     <div className="flex flex-col gap-1">
                         <button
                             onClick={() => setIsHSMenuOpen(!isHSMenuOpen)}
@@ -111,6 +169,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                         )}
                     </div>
                     
+                    {/* 3. Lead Finder */}
                     <div className="flex flex-col gap-1">
                         <button
                             onClick={() => setIsLeadMenuOpen(!isLeadMenuOpen)}
@@ -119,8 +178,8 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                             <SidebarItem
                                 icon={LayoutDashboard}
                                 label="Lead Finder"
-                                to="/"
-                                active={location.pathname === '/' || location.pathname === '/leads'}
+                                to="/leads-discovery" 
+                                active={location.pathname === '/leads-discovery' || location.pathname === '/leads'}
                                 hasSubmenu
                                 isOpen={isLeadMenuOpen}
                             />
@@ -131,8 +190,8 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                                 <SubSidebarItem
                                     icon={Search}
                                     label="AI Discovery"
-                                    to="/"
-                                    active={location.pathname === '/'}
+                                    to="/leads-discovery"
+                                    active={location.pathname === '/leads-discovery'}
                                     onClick={onClose}
                                 />
                                 <SubSidebarItem
@@ -140,62 +199,6 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                                     label="Leads Vault"
                                     to="/leads"
                                     active={location.pathname === '/leads'}
-                                    onClick={onClose}
-                                />
-                            </div>
-                        )}
-                    </div>
-                    
-                    <div className="flex flex-col gap-1">
-                        <button
-                            onClick={() => setIsAnalyticsMenuOpen(!isAnalyticsMenuOpen)}
-                            className="w-full text-left"
-                        >
-                            <SidebarItem
-                                icon={BookOpen}
-                                label="Trade Analytics"
-                                to="/analytics/dashboard"
-                                active={location.pathname.startsWith('/analytics')}
-                                hasSubmenu
-                                isOpen={isAnalyticsMenuOpen}
-                            />
-                        </button>
-                        
-                        {isAnalyticsMenuOpen && (
-                            <div className="flex flex-col gap-1 py-1 animate-in slide-in-from-top-2 duration-300">
-                                <SubSidebarItem
-                                    icon={LayoutDashboard}
-                                    label="Dashboard"
-                                    to="/analytics/dashboard"
-                                    active={location.pathname === '/analytics/dashboard'}
-                                    onClick={onClose}
-                                />
-                                <SubSidebarItem
-                                    icon={Database}
-                                    label="Data Explore"
-                                    to="/analytics/explore"
-                                    active={location.pathname === '/analytics/explore'}
-                                    onClick={onClose}
-                                />
-                                <SubSidebarItem
-                                    icon={Search}
-                                    label="Insights"
-                                    to="/analytics/insights"
-                                    active={location.pathname === '/analytics/insights'}
-                                    onClick={onClose}
-                                />
-                                <SubSidebarItem
-                                    icon={Target}
-                                    label="Buyer Finder"
-                                    to="/analytics/buyers"
-                                    active={location.pathname === '/analytics/buyers'}
-                                    onClick={onClose}
-                                />
-                                <SubSidebarItem
-                                    icon={FileSearch}
-                                    label="Data Upload"
-                                    to="/analytics/upload"
-                                    active={location.pathname === '/analytics/upload'}
                                     onClick={onClose}
                                 />
                             </div>

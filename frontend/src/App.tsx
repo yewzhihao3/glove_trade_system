@@ -58,7 +58,8 @@ const AppContent = () => {
         <main className="flex-1 overflow-y-auto custom-scrollbar flex flex-col relative">
           <div className="flex-1 p-4 lg:p-8">
             <Routes>
-              <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/" element={<ProtectedRoute><TradeDashboard /></ProtectedRoute>} />
+              <Route path="/leads-discovery" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/hscodes" element={<ProtectedRoute><HSCodeIntelligence /></ProtectedRoute>} />
               <Route path="/hscodes/manage" element={<ProtectedRoute><HSCodeManagement /></ProtectedRoute>} />
               <Route path="/leads" element={<ProtectedRoute><SavedLeads /></ProtectedRoute>} />
