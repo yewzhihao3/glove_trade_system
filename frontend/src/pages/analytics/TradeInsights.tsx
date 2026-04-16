@@ -19,7 +19,10 @@ function buildDateParams(range: DateRangeValue): DateParams {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
+import { useAuth } from '../../hooks/useAuth';
+
 export default function TradeInsights() {
+  const { user } = useAuth();
   // Tab & metric
   const [activeTab, setActiveTab]     = useState<TabCategory>('Buyers');
   const [activeMetric, setActiveMetric] = useState<string>('top-buyers');
@@ -78,7 +81,7 @@ export default function TradeInsights() {
       metrics: [
         { value: 'monthly-trend',   label: 'Monthly Sales Volume' },
         { value: 'yearly-trend',    label: 'Yearly Sales Volume'  },
-        { value: 'top-salespeople', label: 'Top Salespeople'      },
+        ...(user?.role === 'admin' ? [{ value: 'top-salespeople', label: 'Top Salespeople' }] : []),
       ],
     },
   ];

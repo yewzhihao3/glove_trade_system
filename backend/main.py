@@ -17,6 +17,12 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Trade Intelligence Platform API")
 
+import logging
+from fastapi.responses import JSONResponse
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("app")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -24,6 +30,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    logger.error(f"Error: {str(exc)}")
+    return JSONResponse(status_code=500, content={"detail": "Internal Server Error"})
 
 app.include_router(auth_router)
 app.include_router(history_router)

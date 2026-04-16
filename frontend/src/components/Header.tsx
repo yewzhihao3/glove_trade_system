@@ -1,5 +1,6 @@
-import { useLocation } from 'react-router-dom';
-import { Menu, User, Sun, Moon } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { useLocation, Link } from 'react-router-dom';
+import { Menu, User, Sun, Moon, Settings, LogOut, ChevronDown } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
 
@@ -8,8 +9,22 @@ interface HeaderProps {
 }
 
 const Header = ({ onMenuClick }: HeaderProps) => {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  // click outside to close dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const location = useLocation();
-  const { user } = useAuth();
+  const { logout, user } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const pageTitle = location.pathname === '/' ? 'Overview' : location.pathname.substring(1).charAt(0).toUpperCase() + location.pathname.slice(2);
 
@@ -42,14 +57,42 @@ const Header = ({ onMenuClick }: HeaderProps) => {
             {theme === 'dark' ? <Sun className="w-5 h-5 text-amber-200" /> : <Moon className="w-5 h-5 text-indigo-400" />}
           </button>
           <div className="h-6 w-px bg-black/5 dark:bg-white/5 mx-1" />
-          <button className="flex items-center gap-3 pl-2 pr-4 py-2 rounded-xl hover:bg-black/5 dark:bg-white/5 transition-all text-sm group">
-            <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-slate-900 dark:text-white transition-all">
-              <User className="w-4 h-4" />
-            </div>
-            <span className="text-slate-600 dark:text-slate-300 font-medium group-hover:text-slate-900 dark:text-white transition-colors uppercase tracking-widest text-xs">
-              {displayName}
-            </span>
-          </button>
+          <div className="relative" ref={dropdownRef}>
+            <button 
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center gap-3 pl-2 pr-4 py-2 rounded-xl hover:bg-black/5 dark:bg-white/5 transition-all text-sm group"
+            >
+              <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-all">
+                <User className="w-4 h-4" />
+              </div>
+              <span className="text-slate-600 dark:text-slate-300 font-medium group-hover:text-slate-900 dark:text-white transition-colors uppercase tracking-widest text-xs flex items-center gap-1">
+                {displayName}
+                <ChevronDown className="w-3 h-3 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-transform duration-200" style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'none' }} />
+              </span>
+            </button>
+            
+            {isDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 rounded-xl bg-white dark:bg-slate-900 border border-black/5 dark:border-white/5 shadow-2xl overflow-hidden py-2 animate-in slide-in-from-top-2">
+                {user?.role === 'admin' && (
+                  <Link 
+                    to="/settings/users" 
+                    onClick={() => setIsDropdownOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                  >
+                    <Settings className="w-4 h-4" />
+                    Settings
+                  </Link>
+                )}
+                <button 
+                  onClick={() => { setIsDropdownOpen(false); logout(); }}
+                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors text-left"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sign Out
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>

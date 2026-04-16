@@ -60,6 +60,7 @@ const TradeExplore: React.FC = () => {
   };
 
   const totalPages = Math.ceil(total / pageSize);
+  const hasSalesperson = data.some(row => row.salesperson);
 
   return (
     <div className="h-full flex flex-col relative z-10 scroll-smooth">
@@ -147,7 +148,7 @@ const TradeExplore: React.FC = () => {
                   <th className="px-6 py-4 font-medium whitespace-nowrap">Item No</th>
                   <th className="px-6 py-4 font-medium text-right">Quantity</th>
                   <th className="px-6 py-4 font-medium">Country</th>
-                  <th className="px-6 py-4 font-medium whitespace-nowrap">Invoice No</th>
+                  {hasSalesperson && <th className="px-6 py-4 font-medium whitespace-nowrap">Salesperson</th>}
                   <th className="px-6 py-4 font-medium">Description</th>
                 </tr>
               </thead>
@@ -167,7 +168,7 @@ const TradeExplore: React.FC = () => {
                       <td className="px-6 py-4 text-slate-600 dark:text-slate-300 whitespace-nowrap">{row.item_no}</td>
                       <td className="px-6 py-4 text-slate-600 dark:text-slate-300 text-right font-mono">{row.total_quantity_pcs.toLocaleString()}</td>
                       <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{row.ship_to_country}</td>
-                      <td className="px-6 py-4 text-slate-500 dark:text-slate-400 whitespace-nowrap">{row.invoice_no}</td>
+                      {hasSalesperson && <td className="px-6 py-4 text-slate-500 dark:text-slate-400 whitespace-nowrap">{row.salesperson || '-'}</td>}
                       <td className="px-6 py-4 text-slate-500 dark:text-slate-400 break-words max-w-[200px]" title={row.description_brand}>{row.description_brand}</td>
                     </tr>
                   ))

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 export const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!authService.getToken());
-  const [user, setUser] = useState<{ id: number; email: string; username?: string } | null>(null);
+  const [user, setUser] = useState<{ id: number; email: string; username?: string; role?: string } | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {

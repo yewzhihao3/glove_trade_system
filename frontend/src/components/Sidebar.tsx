@@ -122,13 +122,15 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                                     active={location.pathname === '/analytics/buyers'}
                                     onClick={onClose}
                                 />
-                                <SubSidebarItem
-                                    icon={FileSearch}
-                                    label="Data Upload"
-                                    to="/analytics/upload"
-                                    active={location.pathname === '/analytics/upload'}
-                                    onClick={onClose}
-                                />
+                                {user?.role === 'admin' && (
+                                    <SubSidebarItem
+                                        icon={FileSearch}
+                                        label="Data Upload"
+                                        to="/analytics/upload"
+                                        active={location.pathname === '/analytics/upload'}
+                                        onClick={onClose}
+                                    />
+                                )}
                             </div>
                         )}
                     </div>
@@ -206,33 +208,35 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                     </div>
                     <div className="my-6 border-t border-black/5 dark:border-white/5 mx-2" />
                     
-                    <div className="flex flex-col gap-1">
-                        <button
-                            onClick={() => setIsSettingsMenuOpen(!isSettingsMenuOpen)}
-                            className="w-full text-left"
-                        >
-                            <SidebarItem
-                                icon={Settings}
-                                label="Settings"
-                                to="/settings/users"
-                                active={location.pathname.startsWith('/settings')}
-                                hasSubmenu
-                                isOpen={isSettingsMenuOpen}
-                            />
-                        </button>
-                        
-                        {isSettingsMenuOpen && (
-                            <div className="flex flex-col gap-1 py-1 animate-in slide-in-from-top-2 duration-300">
-                                <SubSidebarItem
-                                    icon={User}
-                                    label="User Management"
+                    {user?.role === 'admin' && (
+                        <div className="flex flex-col gap-1">
+                            <button
+                                onClick={() => setIsSettingsMenuOpen(!isSettingsMenuOpen)}
+                                className="w-full text-left"
+                            >
+                                <SidebarItem
+                                    icon={Settings}
+                                    label="Settings"
                                     to="/settings/users"
-                                    active={location.pathname === '/settings/users'}
-                                    onClick={onClose}
+                                    active={location.pathname.startsWith('/settings')}
+                                    hasSubmenu
+                                    isOpen={isSettingsMenuOpen}
                                 />
-                            </div>
-                        )}
-                    </div>
+                            </button>
+                            
+                            {isSettingsMenuOpen && (
+                                <div className="flex flex-col gap-1 py-1 animate-in slide-in-from-top-2 duration-300">
+                                    <SubSidebarItem
+                                        icon={User}
+                                        label="User Management"
+                                        to="/settings/users"
+                                        active={location.pathname === '/settings/users'}
+                                        onClick={onClose}
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </nav>
 
                 <div className="mt-auto">
@@ -245,7 +249,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                                 <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
                                     {user?.username || user?.email?.split('@')[0] || 'Loading...'}
                                 </p>
-                                <p className="text-[10px] text-blue-400 font-mono tracking-tighter uppercase">Operator</p>
+                                <p className="text-[10px] text-blue-400 font-mono tracking-tighter uppercase">{user?.role || 'Operator'}</p>
                             </div>
                         </div>
                         <button onClick={logout} className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-black/5 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:bg-black/10 dark:bg-white/10 hover:text-rose-400 hover:border-rose-500/20 border border-transparent transition-all text-xs font-bold tracking-widest uppercase">

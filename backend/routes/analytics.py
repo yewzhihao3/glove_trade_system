@@ -104,6 +104,8 @@ def get_top_salespeople(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
+    if current_user.role != "admin":
+        return []
     return analytics_service.get_top_salespeople(db, limit, date_from, date_to)
 
 

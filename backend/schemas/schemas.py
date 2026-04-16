@@ -45,11 +45,9 @@ class TradeHistoryBase(BaseModel):
     total_quantity_pcs: Optional[int] = None
     product_code: str
     item_no: Optional[str] = None
-    invoice_no: Optional[str] = None
     company_name: str
     posting_group: Optional[str] = None
     salesperson: Optional[str] = None
-    import_batch: Optional[str] = None
 
 class TradeHistoryCreate(TradeHistoryBase):
     pass

@@ -46,11 +46,9 @@ export interface TradeHistory {
   total_quantity_pcs: number;
   product_code: string;
   item_no: string;
-  invoice_no: string;
   company_name: string;
   posting_group: string;
-  salesperson: string;
-  import_batch: string;
+  salesperson?: string;
   created_at: string;
 }
 

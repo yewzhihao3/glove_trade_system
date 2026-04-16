@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UserPlus, Loader2, Sparkles, User, AlertCircle, Edit, Trash2, Mail, CheckCircle2, KeyRound } from 'lucide-react';
+import { UserPlus, Loader2, Sparkles, User, AlertCircle, Edit, Trash2, Mail, CheckCircle2, KeyRound, ShieldCheck } from 'lucide-react';
 import { authService } from '../services/auth';
 import { useAuth } from '../hooks/useAuth';
 
@@ -17,6 +17,7 @@ export default function UserManagement() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('marketing');
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
 
@@ -41,6 +42,7 @@ export default function UserManagement() {
     setUsername('');
     setEmail('');
     setPassword('');
+    setRole('marketing');
     setFormError('');
     setIsModalOpen(true);
   };
@@ -50,6 +52,7 @@ export default function UserManagement() {
     setUsername(user.username || '');
     setEmail(user.email);
     setPassword(''); // leave blank
+    setRole(user.role || 'marketing');
     setFormError('');
     setIsModalOpen(true);
   };
@@ -78,9 +81,12 @@ export default function UserManagement() {
     setSubmitting(true);
     try {
       if (editingUserId) {
-        await authService.updateUser(editingUserId, { username, email, password: password || undefined });
+        await authService.updateUser(editingUserId, { username, email, password: password || undefined, role });
       } else {
-        await authService.createUser({ username, email, password });
+        const newUser = await authService.createUser({ username, email, password });
+        if (role !== 'marketing') {
+            await authService.updateUser(newUser.id, { role });
+        }
       }
       setIsModalOpen(false);
       fetchUsers();
@@ -144,6 +150,9 @@ export default function UserManagement() {
               <div className="flex items-center justify-between border-t border-black/5 dark:border-white/5 pt-5 relative z-10">
                 <div className="text-[9px] text-slate-600 uppercase tracking-widest font-black">
                   {currentUser?.id === u.id ? <span className="text-emerald-500">Active Session</span> : 'Operator Access'}
+                </div>
+                <div className="absolute top-4 right-4 text-[10px] font-bold tracking-widest uppercase px-2 py-1 rounded bg-black/5 dark:bg-white/5 text-slate-500 object-top">
+                  {u.role === 'admin' ? <span className="text-blue-500">ADMIN</span> : 'MKTG'}
                 </div>
                 <div className="flex gap-2">
                   <button
@@ -239,6 +248,23 @@ export default function UserManagement() {
                     className="w-full bg-white dark:bg-slate-900/50 border border-black/5 dark:border-white/5 rounded-2xl py-3 pl-12 pr-4 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/50 focus:border-transparent outline-none transition-all placeholder:text-slate-700"
                     placeholder={editingUserId ? "Leave blank to keep current password" : "••••••••"}
                   />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Operator Role</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <ShieldCheck className="h-5 w-5 text-slate-600" />
+                  </div>
+                  <select
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                    className="w-full bg-white dark:bg-slate-900/50 border border-black/5 dark:border-white/5 rounded-2xl py-3 pl-12 pr-4 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/50 focus:border-transparent outline-none transition-all appearance-none cursor-pointer"
+                  >
+                    <option value="marketing">Marketing (Restricted)</option>
+                    <option value="admin">Administrator (Full Access)</option>
+                  </select>
                 </div>
               </div>
 

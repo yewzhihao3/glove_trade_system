@@ -4,7 +4,7 @@ from typing import Optional, List
 from database import get_db
 from schemas import schemas
 from services.history_service import get_paginated_history, process_history_upload
-from routes.auth import get_current_user
+from routes.auth import get_current_user, require_role
 
 router = APIRouter(prefix="/history", tags=["Trade History"])
 
@@ -37,6 +37,10 @@ def get_history(
         posting_group=posting_group
     )
     
+    if current_user.role != "admin":
+        for item in data:
+            item.salesperson = None
+            
     return {
         "data": data,
         "total": total_count,
@@ -48,7 +52,7 @@ def get_history(
 def upload_history(
     files: List[UploadFile] = File(...),
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(require_role(["admin"]))
 ):
     total_inserted = 0
     total_skipped = 0
