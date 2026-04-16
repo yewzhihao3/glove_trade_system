@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, Text, UniqueConstraint, JSON
+from sqlalchemy import Column, Integer, String, Float, DateTime, Text, UniqueConstraint, JSON, Index
 from sqlalchemy.sql import func
 from database import Base
 from .user import User
@@ -51,3 +51,18 @@ class TradeHistory(Base):
     salesperson = Column(String)
     import_batch = Column(String, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class MonthlyTradeRollup(Base):
+    __tablename__ = "monthly_trade_rollup"
+
+    id = Column(Integer, primary_key=True, index=True)
+    year = Column(Integer, index=True)
+    month = Column(Integer, index=True)
+    product_code = Column(String, index=True)
+    country = Column(String, index=True)
+    total_quantity = Column(Float)
+
+    __table_args__ = (
+        UniqueConstraint('year', 'month', 'product_code', 'country', name='_rollup_ympc_uc'),
+        Index('idx_rollup_lookup', 'year', 'month', 'product_code', 'country')
+    )

@@ -26,6 +26,7 @@ export default function TradeInsights() {
   // Tab & metric
   const [activeTab, setActiveTab]     = useState<TabCategory>('Buyers');
   const [activeMetric, setActiveMetric] = useState<string>('top-buyers');
+  const [viewMode, setViewMode]         = useState<'trend' | 'compare'>('trend');
 
   // Date range — defaults to "Last 30 Days"
   const initialPreset = resolvePresetDates('last-30');
@@ -95,12 +96,13 @@ export default function TradeInsights() {
   }, [activeTab]);
 
   // Fetch whenever metric, date range, or potential-buyer filters change
+  // Fetch whenever metric, date range, or mode changes
   // Debounced to avoid double-firing on activeTab → activeMetric cascade
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => fetchActiveData(), 80);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [activeMetric, dateRange, minTransactions, minValue]);
+  }, [activeMetric, dateRange, minTransactions, minValue, viewMode]);
 
   // ─── Fetch ───────────────────────────────────────────────────────────────────
 
@@ -115,16 +117,22 @@ export default function TradeInsights() {
         return;
       }
 
-      let res: AnalyticalResult[] = [];
-      switch (activeMetric) {
-        case 'top-buyers':     res = await tradeService.getTopBuyers(20, dates);     break;
-        case 'top-products':   res = await tradeService.getTopProducts(20, dates);   break;
-        case 'top-sizes':      res = await tradeService.getTopSizes(20, dates);      break;
-        case 'top-items':      res = await tradeService.getTopItems(20, dates);      break;
-        case 'top-countries':  res = await tradeService.getTopCountries(20, dates);  break;
-        case 'monthly-trend':  res = await tradeService.getMonthlyTrend(dates);      break;
-        case 'yearly-trend':   res = await tradeService.getYearlyTrend(dates);       break;
-        case 'top-salespeople': res = await tradeService.getTopSalespeople(20, dates); break;
+      let res: any[] = [];
+      
+      // Handle special Compare mode
+      if (viewMode === 'compare' && (activeMetric === 'monthly-trend' || activeMetric === 'yearly-trend')) {
+          res = await tradeService.getYoyComparison(dates);
+      } else {
+          switch (activeMetric) {
+            case 'top-buyers':     res = await tradeService.getTopBuyers(20, dates);     break;
+            case 'top-products':   res = await tradeService.getTopProducts(20, dates);   break;
+            case 'top-sizes':      res = await tradeService.getTopSizes(20, dates);      break;
+            case 'top-items':      res = await tradeService.getTopItems(20, dates);      break;
+            case 'top-countries':  res = await tradeService.getTopCountries(20, dates);  break;
+            case 'monthly-trend':  res = await tradeService.getMonthlyTrend(dates);      break;
+            case 'yearly-trend':   res = await tradeService.getYearlyTrend(dates);       break;
+            case 'top-salespeople': res = await tradeService.getTopSalespeople(20, dates); break;
+          }
       }
 
       setPrevData(res);   // keep for smooth transition
@@ -239,6 +247,42 @@ export default function TradeInsights() {
     const isTrend      = activeMetric.includes('trend');
     const chartTitle   = TABS.flatMap(t => t.metrics).find(m => m.value === activeMetric)?.label ?? 'Analysis';
     const barFill      = ['top-products','top-sizes','top-items'].includes(activeMetric) ? '#10b981' : '#3b82f6';
+    
+    // Dynamic Colors for Multi-line
+    const CHART_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'];
+
+    if (isTrend && viewMode === 'compare') {
+      const lineKeys = displayData.length > 0 
+          ? Object.keys(displayData[0]).filter(k => k.endsWith('_qty')).sort() 
+          : [];
+          
+      return (
+        <div className="mt-4 transition-opacity duration-300" style={{ opacity: loading ? 0.6 : 1 }}>
+          <ChartCard title={`${chartTitle} (Year-over-Year)`}>
+            <ResponsiveContainer width="100%" height={400}>
+              <LineChart data={displayData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+                <XAxis dataKey="month_label" stroke="#94a3b8" tick={{ fill:'#94a3b8' }} />
+                <YAxis stroke="#94a3b8" tick={{ fill:'#94a3b8' }} tickFormatter={formatNumber} />
+                <RechartsTooltip contentStyle={{ backgroundColor:'#0f172a', border:'1px solid #334155', borderRadius:'0.5rem' }} />
+                {lineKeys.map((key, idx) => (
+                  <Line 
+                    key={key} 
+                    type="monotone" 
+                    dataKey={key} 
+                    name={key.replace('_qty', '')} 
+                    stroke={CHART_COLORS[idx % CHART_COLORS.length]} 
+                    strokeWidth={3} 
+                    dot={{ r:4, fill:'#0f172a', strokeWidth:2 }} 
+                    activeDot={{ r:6 }} 
+                  />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+      );
+    }
 
     if (isTrend) {
       return (
@@ -353,6 +397,35 @@ export default function TradeInsights() {
             ))}
           </select>
         </div>
+
+        {/* Mode Toggle (Only show for Trends) */}
+        {(activeMetric === 'monthly-trend' || activeMetric === 'yearly-trend') && (
+          <>
+            <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 hidden md:block" />
+            <div className="flex bg-slate-100 dark:bg-slate-900/50 p-1 rounded-lg border border-slate-200 dark:border-slate-700">
+              <button
+                onClick={() => setViewMode('trend')}
+                className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all ${
+                  viewMode === 'trend'
+                    ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+                }`}
+              >
+                Continuous
+              </button>
+              <button
+                onClick={() => setViewMode('compare')}
+                className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all ${
+                  viewMode === 'compare'
+                    ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+                }`}
+              >
+                YoY Compare
+              </button>
+            </div>
+          </>
+        )}
 
         {/* Loading indicator */}
         {loading && (

@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import Optional, List
 from database import get_db
 from schemas import schemas
-from services.history_service import get_paginated_history, process_history_upload
+from services.history_service import get_paginated_history, process_history_upload, rebuild_rollup_table
 from routes.auth import get_current_user, require_role
 
 router = APIRouter(prefix="/history", tags=["Trade History"])
@@ -50,6 +50,7 @@ def get_history(
 
 @router.post("/upload", response_model=schemas.UploadHistoryResponse)
 def upload_history(
+    background_tasks: BackgroundTasks,
     files: List[UploadFile] = File(...),
     db: Session = Depends(get_db),
     current_user = Depends(require_role(["admin"]))
@@ -60,6 +61,9 @@ def upload_history(
         inserted, skipped = process_history_upload(db, file)
         total_inserted += inserted
         total_skipped += skipped
+        
+    # Trigger rollup rebuild atomically after upload
+    background_tasks.add_task(rebuild_rollup_table, db)
         
     return {
         "inserted_rows": total_inserted,

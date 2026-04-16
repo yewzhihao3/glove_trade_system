@@ -4,6 +4,9 @@ import pandas as pd
 from typing import Optional, Tuple
 from fastapi import UploadFile, HTTPException
 from models import models
+import logging
+
+logger = logging.getLogger("uvicorn")
 
 def get_paginated_history(
     db: Session,
@@ -208,3 +211,59 @@ def process_history_upload(db: Session, file: UploadFile) -> Tuple[int, int]:
             db.commit()
             
     return inserted, skipped
+
+
+def rebuild_rollup_table(db: Session):
+    """
+    Fully rebuilds the MonthlyTradeRollup table atomically.
+    Aggregates trade_history using YEAR and MONTH string extractions.
+    (Optimized and safe approach for SQLite/SQL engine).
+    """
+    logger.info("Starting background task: rebuild_rollup_table - Rebuilding MonthlyTradeRollup...")
+    
+    try:
+        # Start transaction
+        db.execute(models.MonthlyTradeRollup.__table__.delete())
+        
+        # Read raw data grouped by year, month, product, country
+        # Using string functions to be safe for SQLite ('YYYY-MM-DD')
+        from sqlalchemy import func, Integer
+        
+        agg_query = db.query(
+            func.cast(func.substr(models.TradeHistory.posting_date, 1, 4), Integer).label('year'),
+            func.cast(func.substr(models.TradeHistory.posting_date, 6, 2), Integer).label('month'),
+            models.TradeHistory.product_code,
+            models.TradeHistory.ship_to_country.label('country'),
+            func.sum(models.TradeHistory.total_quantity_pcs).label('total_quantity')
+        ).filter(
+            models.TradeHistory.posting_date != None,
+            models.TradeHistory.posting_date != ""
+        ).group_by(
+            func.substr(models.TradeHistory.posting_date, 1, 4),
+            func.substr(models.TradeHistory.posting_date, 6, 2),
+            models.TradeHistory.product_code,
+            models.TradeHistory.ship_to_country
+        ).all()
+        
+        new_rollups = []
+        for r in agg_query:
+            if not r.year or not r.month:
+                continue
+            new_rollups.append(
+                models.MonthlyTradeRollup(
+                    year=int(r.year),
+                    month=int(r.month),
+                    product_code=r.product_code or "",
+                    country=r.country or "Unknown",
+                    total_quantity=float(r.total_quantity or 0)
+                )
+            )
+            
+        if new_rollups:
+            db.bulk_save_objects(new_rollups)
+            
+        db.commit()
+        logger.info(f"Successfully rebuilt MonthlyTradeRollup with {len(new_rollups)} aggregated rows.")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to rebuild rollup table: {str(e)}")

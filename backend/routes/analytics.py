@@ -163,3 +163,24 @@ def get_recommended_buyers(
         db, product_code=product_code, size=size, country=country,
         date_from=date_from, date_to=date_to, limit=limit
     )
+
+@router.get("/yoy-comparison")
+def get_yoy_comparison(
+    date_from: Optional[str] = Query(None),
+    date_to: Optional[str] = Query(None),
+    product_code: Optional[str] = Query(None),
+    country: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Returns an array of wide-format YOY data covering months 1-12.
+    It guarantees all months are returned, with dynamics year keys (e.g. 2022_qty).
+    """
+    return analytics_service.get_yoy_comparison(
+        db, 
+        date_from=date_from, 
+        date_to=date_to, 
+        product_code=product_code, 
+        country=country
+    )

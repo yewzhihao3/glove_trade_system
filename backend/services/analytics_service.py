@@ -1,9 +1,16 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, or_, String
 from typing import List, Dict, Optional
 from models import models
 from datetime import datetime
+from collections import defaultdict
+from cachetools import TTLCache
+import logging
 
+logger = logging.getLogger("uvicorn")
+
+# YoY Cache: 1 hour TTL, max 100 items
+yoy_cache = TTLCache(maxsize=100, ttl=3600)
 
 # ─── Shared date-filter helper ────────────────────────────────────────────────
 
@@ -56,19 +63,28 @@ def get_top_products(db: Session, limit: int = 10, date_from: Optional[str] = No
 
 def get_monthly_trend(db: Session, date_from: Optional[str] = None, date_to: Optional[str] = None) -> List[Dict]:
     q = db.query(
-        func.substr(models.TradeHistory.posting_date, 1, 7).label('month'),
-        func.sum(models.TradeHistory.total_quantity_pcs).label('total_quantity_pcs')
-    ).filter(
-        models.TradeHistory.posting_date != None,
-        models.TradeHistory.posting_date != ""
+        models.MonthlyTradeRollup.year,
+        models.MonthlyTradeRollup.month,
+        func.sum(models.MonthlyTradeRollup.total_quantity).label('total_quantity_pcs')
     )
-    q = _apply_date_filter(q, date_from, date_to)
+    
+    if date_from:
+        sy = int(date_from[:4])
+        sm = int(date_from[5:7])
+        q = q.filter(or_(models.MonthlyTradeRollup.year > sy, (models.MonthlyTradeRollup.year == sy) & (models.MonthlyTradeRollup.month >= sm)))
+    if date_to:
+        ey = int(date_to[:4])
+        em = int(date_to[5:7])
+        q = q.filter(or_(models.MonthlyTradeRollup.year < ey, (models.MonthlyTradeRollup.year == ey) & (models.MonthlyTradeRollup.month <= em)))
+    
     results = q.group_by(
-        func.substr(models.TradeHistory.posting_date, 1, 7)
+        models.MonthlyTradeRollup.year,
+        models.MonthlyTradeRollup.month
     ).order_by(
-        func.substr(models.TradeHistory.posting_date, 1, 7).asc()
+        models.MonthlyTradeRollup.year.asc(),
+        models.MonthlyTradeRollup.month.asc()
     ).all()
-    return [{"month": r.month, "total_quantity_pcs": r.total_quantity_pcs} for r in results]
+    return [{"month": f"{r.year}-{r.month:02d}", "total_quantity_pcs": r.total_quantity_pcs} for r in results]
 
 
 def get_company_trend(db: Session, company_name: str, date_from: Optional[str] = None, date_to: Optional[str] = None) -> List[Dict]:
@@ -151,19 +167,24 @@ def get_top_salespeople(db: Session, limit: int = 10, date_from: Optional[str] =
 
 def get_yearly_trend(db: Session, date_from: Optional[str] = None, date_to: Optional[str] = None) -> List[Dict]:
     q = db.query(
-        func.substr(models.TradeHistory.posting_date, 1, 4).label('year'),
-        func.sum(models.TradeHistory.total_quantity_pcs).label('total_quantity_pcs')
-    ).filter(
-        models.TradeHistory.posting_date != None,
-        models.TradeHistory.posting_date != ""
+        func.cast(models.MonthlyTradeRollup.year, String).label('year'),
+        func.sum(models.MonthlyTradeRollup.total_quantity).label('total_quantity_pcs')
     )
-    q = _apply_date_filter(q, date_from, date_to)
+    if date_from:
+        sy = int(date_from[:4])
+        sm = int(date_from[5:7])
+        q = q.filter(or_(models.MonthlyTradeRollup.year > sy, (models.MonthlyTradeRollup.year == sy) & (models.MonthlyTradeRollup.month >= sm)))
+    if date_to:
+        ey = int(date_to[:4])
+        em = int(date_to[5:7])
+        q = q.filter(or_(models.MonthlyTradeRollup.year < ey, (models.MonthlyTradeRollup.year == ey) & (models.MonthlyTradeRollup.month <= em)))
+
     results = q.group_by(
-        func.substr(models.TradeHistory.posting_date, 1, 4)
+        models.MonthlyTradeRollup.year
     ).order_by(
-        func.substr(models.TradeHistory.posting_date, 1, 4).asc()
+        models.MonthlyTradeRollup.year.asc()
     ).all()
-    return [{"year": r.year, "total_quantity_pcs": r.total_quantity_pcs} for r in results]
+    return [{"year": str(r.year), "total_quantity_pcs": r.total_quantity_pcs} for r in results]
 
 
 def get_potential_buyers(
@@ -423,3 +444,104 @@ def get_recommended_buyers(
         item.pop("_score", None)
 
     return scored[:limit]
+
+
+# ─── YoY Comparison ────────────────────────────────────────────────────────────
+
+def get_yoy_comparison(
+    db: Session,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    product_code: Optional[str] = None,
+    country: Optional[str] = None
+) -> List[Dict]:
+    """
+    Retrieves Year-over-Year comparison data from the MonthlyTradeRollup table.
+    Filters by dates, product, and country, caching the result in memory.
+    Transforms data from long to wide format for multi-line charting.
+    """
+    # 1. Check in-memory Cache
+    cache_key = f"yoy_{date_from}_{date_to}_{product_code}_{country}"
+    if cache_key in yoy_cache:
+        logger.info(f"Returning cached YoY data for key: {cache_key}")
+        return yoy_cache[cache_key]
+
+    # 2. Query MonthlyTradeRollup
+    q = db.query(
+        models.MonthlyTradeRollup.year,
+        models.MonthlyTradeRollup.month,
+        func.sum(models.MonthlyTradeRollup.total_quantity).label('total_qty')
+    )
+    
+    # 3. Apply Filters
+    if product_code:
+        q = q.filter(models.MonthlyTradeRollup.product_code == product_code)
+    if country:
+        q = q.filter(models.MonthlyTradeRollup.country == country)
+    
+    if date_from:
+        start_year = int(date_from[:4])
+        start_month = int(date_from[5:7])
+        # Simple approximation, exact requires year+month logic, but usually YoY runs open-ended
+        q = q.filter(or_(
+            models.MonthlyTradeRollup.year > start_year,
+            (models.MonthlyTradeRollup.year == start_year) & (models.MonthlyTradeRollup.month >= start_month)
+        ))
+    if date_to:
+        end_year = int(date_to[:4])
+        end_month = int(date_to[5:7])
+        q = q.filter(or_(
+            models.MonthlyTradeRollup.year < end_year,
+            (models.MonthlyTradeRollup.year == end_year) & (models.MonthlyTradeRollup.month <= end_month)
+        ))
+        
+    results = q.group_by(
+        models.MonthlyTradeRollup.year,
+        models.MonthlyTradeRollup.month
+    ).order_by(
+        models.MonthlyTradeRollup.month,
+        models.MonthlyTradeRollup.year
+    ).all()
+
+    # 4. Process Data (Pivot to Wide Format)
+    # Target: {"month_index": 1, "month_label": "Jan", "2022_qty": 5000, "2023_qty": 6000}
+    
+    month_labels = {
+        1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr", 5: "May", 6: "Jun",
+        7: "Jul", 8: "Aug", 9: "Sep", 10: "Oct", 11: "Nov", 12: "Dec"
+    }
+
+    # Initialize 12 rows perfectly
+    wide_data = []
+    for m in range(1, 13):
+        wide_data.append({
+            "month_index": m,
+            "month_label": month_labels[m]
+        })
+        
+    # Extract dynamically available years from results to pad out 0s if no data
+    all_years = {r.year for r in results if r.year}
+
+    sorted_years = sorted(list(all_years))
+    
+    # Initialize all known year keys with 0 inside our wide_data dicts
+    for row_dict in wide_data:
+        for y in sorted_years:
+            row_dict[f"{y}_qty"] = 0
+            
+    # Populate actual values
+    for r in results:
+        if not r.month or not r.year:
+            continue
+        # month is 1-12, index in array is month - 1
+        month_idx = int(r.month) - 1
+        year_key = f"{int(r.year)}_qty"
+        if 0 <= month_idx < 12:
+            wide_data[month_idx][year_key] += int(r.total_qty or 0)
+
+    logger.info(f"Generated YoY Data with {len(sorted_years)} years found. Saving to cache.")
+    
+    # Cache result
+    yoy_cache[cache_key] = wide_data
+    
+    return wide_data

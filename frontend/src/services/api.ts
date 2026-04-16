@@ -235,14 +235,23 @@ export const tradeService = {
     return response.data;
   },
 
-  getYearlyTrend: async (dates?: DateParams): Promise<AnalyticalResult[]> => {
-    const response = await api.get('/analytics/yearly-trend', { params: { ...dates } });
+  getYearlyTrend: async (dateParams?: DateParams): Promise<AnalyticalResult[]> => {
+    const params = new URLSearchParams(dateParams as Record<string, string>);
+    const response = await api.get(`/analytics/yearly-trend?${params}`);
     return response.data;
   },
 
-  getPotentialBuyers: async (minTransactions: number = 1, minValue: number = 0, dates?: DateParams): Promise<PotentialBuyer[]> => {
+  getYoyComparison: async (dateParams?: DateParams, product_code?: string, country?: string): Promise<any[]> => {
+    const params = new URLSearchParams(dateParams as Record<string, string>);
+    if (product_code) params.append('product_code', product_code);
+    if (country) params.append('country', country);
+    const response = await api.get(`/analytics/yoy-comparison?${params}`);
+    return response.data;
+  },
+
+  getPotentialBuyers: async (minTransactions: number, minValue: number, dateParams?: DateParams): Promise<PotentialBuyer[]> => {
     const response = await api.get('/analytics/potential-buyers', { 
-      params: { min_transactions: minTransactions, min_value: minValue, ...dates } 
+      params: { min_transactions: minTransactions, min_value: minValue, ...dateParams } 
     });
     return response.data;
   },
