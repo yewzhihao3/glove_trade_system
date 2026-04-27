@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export const api = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
 });
 
 api.interceptors.request.use((config) => {
@@ -120,7 +120,7 @@ export const leadService = {
     return response.data;
   },
   generateLeads: async (hs_code: string, keyword: string, country: string) => {
-    const response = await api.post('/leads/generate', { hs_code, keyword, country });
+    const response = await api.post('/ai/generate-buyers', { hs_code, keyword, country });
     return response.data;
   },
   saveLeadManual: async (lead: Partial<BuyerLead>) => {
@@ -143,7 +143,7 @@ export const hsCodeService = {
     return response.data;
   },
   generateHSCodes: async (product_type: string, country: string) => {
-    const response = await api.get('/hscodes/generate', { params: { product_type, country } });
+    const response = await api.post('/ai/generate-hscode', { product_type, country });
     return response.data;
   },
   saveHSCodes: async (codes: Partial<HSCode>[], country: string) => {
@@ -165,13 +165,13 @@ export const hsCodeService = {
 };
 
 export const tradeService = {
-  getHistory: async (params?: { 
-    page?: number; 
-    page_size?: number; 
+  getHistory: async (params?: {
+    page?: number;
+    page_size?: number;
     search?: string;
     date_from?: string;
     date_to?: string;
-    company_name?: string; 
+    company_name?: string;
     country?: string;
     product_code?: string;
     item_no?: string;
@@ -250,8 +250,8 @@ export const tradeService = {
   },
 
   getPotentialBuyers: async (minTransactions: number, minValue: number, dateParams?: DateParams): Promise<PotentialBuyer[]> => {
-    const response = await api.get('/analytics/potential-buyers', { 
-      params: { min_transactions: minTransactions, min_value: minValue, ...dateParams } 
+    const response = await api.get('/analytics/potential-buyers', {
+      params: { min_transactions: minTransactions, min_value: minValue, ...dateParams }
     });
     return response.data;
   },
