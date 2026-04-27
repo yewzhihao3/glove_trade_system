@@ -136,3 +136,12 @@ class RecommendedBuyerResponse(BaseModel):
     last_purchase: str
     match_reason: str
     is_exact_match: bool = False
+
+class FilterFallbackResponse(BaseModel):
+    data: List[str]
+    fallback: bool = False
+
+class BuyerByProductFallbackResponse(BaseModel):
+    data: List[BuyerByProductResponse]
+    fallback: bool = False
+

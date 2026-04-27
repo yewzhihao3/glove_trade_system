@@ -131,7 +131,7 @@ def get_potential_buyers(
     return analytics_service.get_potential_buyers(db, min_transactions, min_value, date_from, date_to)
 
 
-@router.get("/buyers-by-product", response_model=List[schemas.BuyerByProductResponse])
+@router.get("/buyers-by-product", response_model=schemas.BuyerByProductFallbackResponse)
 def get_buyers_by_product(
     product_code: Optional[str] = Query(None),
     size: Optional[str] = Query(None),
@@ -142,10 +142,37 @@ def get_buyers_by_product(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    return analytics_service.get_buyers_by_product(
-        db, product_code=product_code, size=size, country=country,
-        date_from=date_from, date_to=date_to, limit=limit
-    )
+    def run_query(use_product: bool, use_size: bool, use_country: bool):
+        return analytics_service.get_buyers_by_product(
+            db,
+            product_code=product_code if use_product else None,
+            size=size if use_size else None,
+            country=country if use_country else None,
+            date_from=date_from,
+            date_to=date_to,
+            limit=limit
+        )
+
+    results = run_query(True, True, True)
+    if results or (not product_code and not size and not country):
+        return {"data": results, "fallback": False}
+
+    if country:
+        results = run_query(True, True, False)
+        if results:
+            return {"data": results, "fallback": True}
+
+    if size:
+        results = run_query(True, False, False)
+        if results:
+            return {"data": results, "fallback": True}
+
+    if product_code:
+        results = run_query(False, False, False)
+        if results:
+            return {"data": results, "fallback": True}
+
+    return {"data": [], "fallback": False}
 
 
 @router.get("/recommended-buyers", response_model=List[schemas.RecommendedBuyerResponse])
