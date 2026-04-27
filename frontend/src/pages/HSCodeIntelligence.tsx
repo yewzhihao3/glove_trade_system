@@ -6,7 +6,7 @@ import { countries } from '../constants/countries';
 
 const HSCodeIntelligence = () => {
   const [productType] = useState('Gloves'); // Defaulted as requested
-  const [country, setCountry] = useState('Worldwide');
+  const [country, setCountry] = useState('');
   const [loading, setLoading] = useState(false);
   const [hsCodes, setHsCodes] = useState<Partial<HSCode>[]>([]); // Using Partial since id might not be present from AI
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);

@@ -3,6 +3,7 @@ import { Loader2, Building2, Cpu, ExternalLink, ShieldCheck, Sparkles, KeyRound,
 import { leadService, hsCodeService } from '../services/api';
 import type { BuyerLead, HSCode } from '../services/api';
 import SearchableSelect from '../components/SearchableSelect';
+import { countries } from '../constants/countries';
 
 const KEYWORD_OPTIONS = [
   { label: 'Nitrile Gloves', value: 'Nitrile Gloves' },
@@ -28,7 +29,10 @@ const Dashboard = () => {
         const codes: HSCode[] = await hsCodeService.getHSCodes();
         setAllHSCodes(codes);
         const uniqueCountries = Array.from(new Set(codes.map(c => c.country).filter(Boolean))).sort() as string[];
-        setAvailableCountries(uniqueCountries.map(c => ({ label: c, value: c })));
+        setAvailableCountries(uniqueCountries.map(c => {
+          const matchedCountry = countries.find(constC => constC.value === c);
+          return { label: matchedCountry ? matchedCountry.label : c, value: c };
+        }));
       } catch (error) {
         console.error("Error fetching HS Codes:", error);
       }

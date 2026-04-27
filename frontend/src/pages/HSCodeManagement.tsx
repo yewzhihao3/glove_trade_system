@@ -19,7 +19,7 @@ const HSCodeManagement = () => {
     const [itemsPerPage, setItemsPerPage] = useState(10);
 
     // New code form state
-    const [newCode, setNewCode] = useState({ hs_code: '', description: '', country: 'Worldwide' });
+    const [newCode, setNewCode] = useState({ hs_code: '', description: '', country: '' });
 
     useEffect(() => {
         fetchCodes();
@@ -71,7 +71,7 @@ const HSCodeManagement = () => {
             const saved = await hsCodeService.saveHSCodeManual(newCode);
             setCodes([saved, ...codes]);
             setIsAddModalOpen(false);
-            setNewCode({ hs_code: '', description: '', country: 'Worldwide' });
+            setNewCode({ hs_code: '', description: '', country: '' });
         } catch (error: unknown) {
             console.error("Error adding code:", error);
             let message = "Failed to add manual entry.";

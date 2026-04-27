@@ -216,33 +216,18 @@ export default function TradeBuyerFinder() {
   const [productCode,  setProductCode]  = useState('');
   const [size,         setSize]         = useState('');
   const [country,      setCountry]      = useState('');
-  const [sizeOptions,  setSizeOptions]  = useState<string[]>(KNOWN_SIZES);
   // Track whether user manually picked size so auto-detect doesn't override it
   const [sizeManual,   setSizeManual]   = useState(false);
 
   // Results
   const [topBuyers,   setTopBuyers]   = useState<BuyerByProduct[]>([]);
+  const [searchFallback, setSearchFallback] = useState(false);
   const [recBuyers,   setRecBuyers]   = useState<RecommendedBuyer[]>([]);
   const [activeTab,   setActiveTab]   = useState<ResultTab>('top');
   const [loadingTop,  setLoadingTop]  = useState(false);
   const [loadingRec,  setLoadingRec]  = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Re-fetch sizes whenever country changes (country-aware filtering)
-  useEffect(() => {
-    filterService.getSizes(country.trim() || undefined)
-      .then(s => {
-        const available = s.length ? s : KNOWN_SIZES;
-        setSizeOptions(available);
-        // Auto-clear size if it's no longer available in this country
-        if (size && available.length > 0 && !available.includes(size)) {
-          setSize('');
-          setSizeManual(false);
-        }
-      })
-      .catch(() => setSizeOptions(KNOWN_SIZES));
-  }, [country]);
 
   // Derived
   const hasFilters = productCode.trim() !== '' || size !== '' || country.trim() !== '';
@@ -275,8 +260,14 @@ export default function TradeBuyerFinder() {
     setLoadingRec(true);
 
     tradeService.getBuyersByProduct(params)
-      .then(setTopBuyers)
-      .catch(() => setTopBuyers([]))
+      .then(res => {
+        setTopBuyers(res.data);
+        setSearchFallback(res.fallback);
+      })
+      .catch(() => {
+        setTopBuyers([]);
+        setSearchFallback(false);
+      })
       .finally(() => setLoadingTop(false));
 
     tradeService.getRecommendedBuyers(params)
@@ -290,6 +281,7 @@ export default function TradeBuyerFinder() {
     if (!hasFilters) {
       setTopBuyers([]);
       setRecBuyers([]);
+      setSearchFallback(false);
       setHasSearched(false);
       return;
     }
@@ -313,6 +305,7 @@ export default function TradeBuyerFinder() {
     setDateRange({ preset: DEFAULT_PRESET, ...d });
     setTopBuyers([]);
     setRecBuyers([]);
+    setSearchFallback(false);
     setHasSearched(false);
   };
 
@@ -478,7 +471,7 @@ export default function TradeBuyerFinder() {
                     }
                   }}
                   placeholder="e.g. G-OCEF55NBAB-L"
-                  fetchOptions={(q) => filterService.getProductCodes(q)}
+                  fetchOptions={(q) => filterService.getProductCodes(q, 20, country.trim() || undefined, size || undefined)}
                   allowCustomInput
                 />
                 {productCode && extractSizeFromCode(productCode) && !sizeManual && (
@@ -506,20 +499,15 @@ export default function TradeBuyerFinder() {
                   value={country}
                   onChange={setCountry}
                   placeholder="e.g. United States"
-                  fetchOptions={(q) => filterService.getCountries(q)}
+                  fetchOptions={(q) => filterService.getCountries(q, 20, productCode.trim() || undefined, size || undefined)}
                   allowCustomInput
                 />
               </div>
 
-              {/* Size — country-aware dynamic dropdown */}
+              {/* Size — Searchable Select */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm text-slate-700 dark:text-slate-300 font-medium flex items-center gap-1.5">
                   Size
-                  {country.trim() && (
-                    <span className="text-[10px] text-emerald-600/70 font-normal">
-                      {sizeOptions.length} available in {country.trim()}
-                    </span>
-                  )}
                   {size && (
                     <button
                       onClick={() => { setSize(''); setSizeManual(false); }}
@@ -529,14 +517,13 @@ export default function TradeBuyerFinder() {
                     </button>
                   )}
                 </label>
-                  <select
-                    value={size}
-                    onChange={(e) => { setSize(e.target.value); setSizeManual(true); }}
-                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200 px-3 py-2 rounded-lg text-sm outline-none focus:border-emerald-500 transition-colors cursor-pointer w-full"
-                  >
-                    <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200">All Sizes</option>
-                    {sizeOptions.map(s => <option key={s} value={s} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200">{s}</option>)}
-                  </select>
+                <SearchableSelect
+                  value={size}
+                  onChange={(val) => { setSize(val); setSizeManual(true); }}
+                  placeholder="e.g. M, L, XL"
+                  fetchOptions={async () => filterService.getSizes(country.trim() || undefined, productCode.trim() || undefined)}
+                  allowCustomInput
+                />
               </div>
             </div>
 
@@ -650,10 +637,17 @@ export default function TradeBuyerFinder() {
           <div className="bg-white dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-none rounded-2xl overflow-hidden">
 
             {/* Result header */}
-            {resultHeader() && (
-              <div className="px-5 py-3 border-b border-slate-200 dark:border-slate-700/40 flex items-center gap-2">
-                <span className="text-sm text-slate-800 dark:text-slate-300">{resultHeader()}</span>
-                {isLoading && <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-500" />}
+            {(resultHeader() || (hasSearched && searchFallback && activeTab === 'top' && topBuyers.length > 0)) && (
+              <div className="px-5 py-3 border-b border-slate-200 dark:border-slate-700/40 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-slate-800 dark:text-slate-300">{resultHeader()}</span>
+                  {isLoading && <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-500" />}
+                </div>
+                {hasSearched && searchFallback && activeTab === 'top' && topBuyers.length > 0 && !loadingTop && (
+                  <span className="text-[11px] font-medium px-2.5 py-1 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-full border border-amber-200 dark:border-amber-500/20">
+                    No exact matches found. Showing closest results.
+                  </span>
+                )}
               </div>
             )}
 
