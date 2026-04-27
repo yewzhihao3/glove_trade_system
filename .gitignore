@@ -26,6 +26,7 @@ sdist/
 var/
 wheels/
 share/python-wheels/
+.db
 
 # Environment Variables
 .env
