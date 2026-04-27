@@ -3,11 +3,30 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "dev:electron": "cross-env NODE_ENV=development electron .",
+    "electron": "concurrently \"vite\" \"wait-on http://localhost:5173 && npm run dev:electron\"",
+    "build:electron": "tsc -b && vite build && electron-builder"
+  },
+  "build": {
+    "appId": "com.tradeintelligence.app",
+    "productName": "Trade Intelligence Platform",
+    "directories": {
+      "output": "dist_electron"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      ".env"
+    ]
   },
   "dependencies": {
     "axios": "^1.13.6",
@@ -25,6 +44,9 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
     "autoprefixer": "^10.4.27",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^41.3.0",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
@@ -33,6 +55,7 @@
     "tailwindcss": "^4.2.1",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.48.0",
-    "vite": "^7.3.1"
+    "vite": "^7.3.1",
+    "wait-on": "^9.0.5"
   }
 }
