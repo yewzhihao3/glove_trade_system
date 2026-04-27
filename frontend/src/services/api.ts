@@ -164,6 +164,11 @@ export const hsCodeService = {
   }
 };
 
+export interface FallbackResponse<T> {
+  data: T[];
+  fallback: boolean;
+}
+
 export const tradeService = {
   getHistory: async (params?: {
     page?: number;
@@ -256,7 +261,7 @@ export const tradeService = {
     return response.data;
   },
 
-  getBuyersByProduct: async (params: BuyerFinderParams): Promise<BuyerByProduct[]> => {
+  getBuyersByProduct: async (params: BuyerFinderParams): Promise<FallbackResponse<BuyerByProduct>> => {
     const response = await api.get('/analytics/buyers-by-product', { params });
     return response.data;
   },
@@ -268,19 +273,19 @@ export const tradeService = {
 };
 
 export const filterService = {
-  getProductCodes: async (search: string, limit = 20): Promise<string[]> => {
-    const response = await api.get('/filters/product-codes', { params: { search: search || undefined, limit } });
+  getProductCodes: async (search: string, limit = 20, country?: string, size?: string): Promise<FallbackResponse<string>> => {
+    const response = await api.get('/filters/product-codes', { params: { search: search || undefined, limit, country, size } });
     return response.data;
   },
 
-  getCountries: async (search: string, limit = 20): Promise<string[]> => {
-    const response = await api.get('/filters/countries', { params: { search: search || undefined, limit } });
+  getCountries: async (search: string, limit = 20, product_code?: string, size?: string): Promise<FallbackResponse<string>> => {
+    const response = await api.get('/filters/countries', { params: { search: search || undefined, limit, product_code, size } });
     return response.data;
   },
 
-  getSizes: async (country?: string): Promise<string[]> => {
+  getSizes: async (country?: string, product_code?: string): Promise<FallbackResponse<string>> => {
     const response = await api.get('/filters/sizes', {
-      params: country ? { country } : undefined,
+      params: { country: country || undefined, product_code: product_code || undefined },
     });
     return response.data;
   },
