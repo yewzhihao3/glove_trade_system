@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useBackendHealth } from './hooks/useBackendHealth';
+import BackendLoader from './components/BackendLoader';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import HSCodeIntelligence from './pages/HSCodeIntelligence';
@@ -83,12 +85,26 @@ const AppContent = () => {
   );
 };
 
-const App = () => (
-  <ThemeProvider>
-    <Router>
-      <AppContent />
-    </Router>
-  </ThemeProvider>
-);
+const App = () => {
+  const { status, isReady, retryCount, manualRetry } = useBackendHealth();
+
+  if (!isReady) {
+    return (
+      <BackendLoader
+        status={status}
+        retryCount={retryCount}
+        onRetry={manualRetry}
+      />
+    );
+  }
+
+  return (
+    <ThemeProvider>
+      <Router>
+        <AppContent />
+      </Router>
+    </ThemeProvider>
+  );
+};
 
 export default App;

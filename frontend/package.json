@@ -10,7 +10,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "dev:electron": "cross-env NODE_ENV=development electron .",
-    "electron": "concurrently \"vite\" \"wait-on http://localhost:5173 && npm run dev:electron\"",
+    "electron": "concurrently \"vite\" \"node electron/wait-vite.cjs\"",
     "build:electron": "tsc -b && vite build && electron-builder"
   },
   "build": {
