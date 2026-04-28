@@ -26,9 +26,11 @@ sdist/
 var/
 wheels/
 share/python-wheels/
-.db
+*.db
+*.db-shm
+*.db-wal
 
-# Environment Variables
+# Environment Variables — never commit real secrets
 .env
 .env.*
 !.env.example
@@ -42,6 +44,13 @@ Thumbs.db
 *.swo
 *~
 
-
-# ignore this file
+# Ignore this legacy directory
 /glove_buyer_cli
+
+# Python virtual environments
+venv/
+.venv/
+env/
+
+# Alembic — don't ignore generated migration files
+# alembic/versions/*.py  ← keep these committed
