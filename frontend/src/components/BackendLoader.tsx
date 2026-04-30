@@ -3,7 +3,6 @@ import { type BackendStatus } from '../hooks/useBackendHealth';
 
 interface BackendLoaderProps {
   status: BackendStatus;
-  retryCount: number;
   onRetry: () => void;
 }
 
