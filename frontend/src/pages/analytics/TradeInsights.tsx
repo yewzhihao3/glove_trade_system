@@ -24,9 +24,9 @@ import { useAuth } from '../../hooks/useAuth';
 export default function TradeInsights() {
   const { user } = useAuth();
   // Tab & metric
-  const [activeTab, setActiveTab]     = useState<TabCategory>('Buyers');
+  const [activeTab, setActiveTab] = useState<TabCategory>('Buyers');
   const [activeMetric, setActiveMetric] = useState<string>('top-buyers');
-  const [viewMode, setViewMode]         = useState<'trend' | 'compare'>('trend');
+  const [viewMode, setViewMode] = useState<'trend' | 'compare'>('trend');
 
   // Date range — defaults to "Last 30 Days"
   const initialPreset = resolvePresetDates('last-30');
@@ -37,14 +37,14 @@ export default function TradeInsights() {
   });
 
   // Data
-  const [chartData, setChartData]             = useState<AnalyticalResult[]>([]);
-  const [prevData, setPrevData]               = useState<AnalyticalResult[]>([]);   // kept visible during loads
+  const [chartData, setChartData] = useState<AnalyticalResult[]>([]);
+  const [prevData, setPrevData] = useState<AnalyticalResult[]>([]);   // kept visible during loads
   const [potentialBuyers, setPotentialBuyers] = useState<PotentialBuyer[]>([]);
-  const [loading, setLoading]                 = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Potential-buyers filters
   const [minTransactions, setMinTransactions] = useState<number>(1);
-  const [minValue, setMinValue]               = useState<number>(0);
+  const [minValue, setMinValue] = useState<number>(0);
 
   // Debounce ref so rapid filter changes don't fire many requests
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -56,7 +56,7 @@ export default function TradeInsights() {
       id: 'Buyers',
       label: 'Buyers & Leads',
       metrics: [
-        { value: 'top-buyers',       label: 'Top Buyers by Volume'        },
+        { value: 'top-buyers', label: 'Top Buyers by Volume' },
         { value: 'potential-buyers', label: 'Potential Buyers (Lead Gen)' },
       ],
     },
@@ -64,9 +64,9 @@ export default function TradeInsights() {
       id: 'Products',
       label: 'Products Analysis',
       metrics: [
-        { value: 'top-products', label: 'Top Product Codes'      },
-        { value: 'top-sizes',    label: 'Top Sizes'              },
-        { value: 'top-items',    label: 'Top Item Numbers (SKUs)' },
+        { value: 'top-products', label: 'Top Product Codes' },
+        { value: 'top-sizes', label: 'Top Sizes' },
+        { value: 'top-items', label: 'Top Item Numbers (SKUs)' },
       ],
     },
     {
@@ -80,8 +80,8 @@ export default function TradeInsights() {
       id: 'Operations',
       label: 'Business Operations',
       metrics: [
-        { value: 'monthly-trend',   label: 'Monthly Sales Volume' },
-        { value: 'yearly-trend',    label: 'Yearly Sales Volume'  },
+        { value: 'monthly-trend', label: 'Monthly Sales Volume' },
+        { value: 'yearly-trend', label: 'Yearly Sales Volume' },
         ...(user?.role === 'admin' ? [{ value: 'top-salespeople', label: 'Top Salespeople' }] : []),
       ],
     },
@@ -118,21 +118,21 @@ export default function TradeInsights() {
       }
 
       let res: any[] = [];
-      
+
       // Handle special Compare mode
       if (viewMode === 'compare' && (activeMetric === 'monthly-trend' || activeMetric === 'yearly-trend')) {
-          res = await tradeService.getYoyComparison(dates);
+        res = await tradeService.getYoyComparison(dates);
       } else {
-          switch (activeMetric) {
-            case 'top-buyers':     res = await tradeService.getTopBuyers(20, dates);     break;
-            case 'top-products':   res = await tradeService.getTopProducts(20, dates);   break;
-            case 'top-sizes':      res = await tradeService.getTopSizes(20, dates);      break;
-            case 'top-items':      res = await tradeService.getTopItems(20, dates);      break;
-            case 'top-countries':  res = await tradeService.getTopCountries(20, dates);  break;
-            case 'monthly-trend':  res = await tradeService.getMonthlyTrend(dates);      break;
-            case 'yearly-trend':   res = await tradeService.getYearlyTrend(dates);       break;
-            case 'top-salespeople': res = await tradeService.getTopSalespeople(20, dates); break;
-          }
+        switch (activeMetric) {
+          case 'top-buyers': res = await tradeService.getTopBuyers(20, dates); break;
+          case 'top-products': res = await tradeService.getTopProducts(20, dates); break;
+          case 'top-sizes': res = await tradeService.getTopSizes(20, dates); break;
+          case 'top-items': res = await tradeService.getTopItems(20, dates); break;
+          case 'top-countries': res = await tradeService.getTopCountries(20, dates); break;
+          case 'monthly-trend': res = await tradeService.getMonthlyTrend(dates); break;
+          case 'yearly-trend': res = await tradeService.getYearlyTrend(dates); break;
+          case 'top-salespeople': res = await tradeService.getTopSalespeople(20, dates); break;
+        }
       }
 
       setPrevData(res);   // keep for smooth transition
@@ -207,11 +207,10 @@ export default function TradeInsights() {
                       <td className="p-4 text-emerald-600 dark:text-emerald-400 font-medium">{pb.total_orders}</td>
                       <td className="p-4">{pb.total_quantity_pcs.toLocaleString()} PCS</td>
                       <td className="p-4">
-                        <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                          pb.activity_period.includes('Recent')
+                        <span className={`px-2 py-1 rounded text-xs font-semibold ${pb.activity_period.includes('Recent')
                             ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
                             : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
-                        }`}>
+                          }`}>
                           {pb.activity_period}
                         </span>
                       </td>
@@ -233,48 +232,48 @@ export default function TradeInsights() {
 
     // ── Category axis key lookup ─────────────────────────────────────
     const KEY_MAP: Record<string, string> = {
-      'top-buyers':     'company_name',
-      'top-countries':  'ship_to_country',
-      'top-products':   'product_code',
-      'top-sizes':      'size',
-      'top-items':      'item_no',
-      'monthly-trend':  'month',
-      'yearly-trend':   'year',
-      'top-salespeople':'salesperson',
+      'top-buyers': 'company_name',
+      'top-countries': 'ship_to_country',
+      'top-products': 'product_code',
+      'top-sizes': 'size',
+      'top-items': 'item_no',
+      'monthly-trend': 'month',
+      'yearly-trend': 'year',
+      'top-salespeople': 'salesperson',
     };
     const categoryKey = KEY_MAP[activeMetric] ?? 'company_name';
-    const isHorizontal = ['top-countries','top-products','top-sizes','top-items','top-salespeople'].includes(activeMetric);
-    const isTrend      = activeMetric.includes('trend');
-    const chartTitle   = TABS.flatMap(t => t.metrics).find(m => m.value === activeMetric)?.label ?? 'Analysis';
-    const barFill      = ['top-products','top-sizes','top-items'].includes(activeMetric) ? '#10b981' : '#3b82f6';
-    
+    const isHorizontal = ['top-countries', 'top-products', 'top-sizes', 'top-items', 'top-salespeople'].includes(activeMetric);
+    const isTrend = activeMetric.includes('trend');
+    const chartTitle = TABS.flatMap(t => t.metrics).find(m => m.value === activeMetric)?.label ?? 'Analysis';
+    const barFill = ['top-products', 'top-sizes', 'top-items'].includes(activeMetric) ? '#10b981' : '#3b82f6';
+
     // Dynamic Colors for Multi-line
     const CHART_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'];
 
     if (isTrend && viewMode === 'compare') {
-      const lineKeys = displayData.length > 0 
-          ? Object.keys(displayData[0]).filter(k => k.endsWith('_qty')).sort() 
-          : [];
-          
+      const lineKeys = displayData.length > 0
+        ? Object.keys(displayData[0]).filter(k => k.endsWith('_qty')).sort()
+        : [];
+
       return (
         <div className="mt-4 transition-opacity duration-300" style={{ opacity: loading ? 0.6 : 1 }}>
           <ChartCard title={`${chartTitle} (Year-over-Year)`}>
             <ResponsiveContainer width="100%" height={400}>
               <LineChart data={displayData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-                <XAxis dataKey="month_label" stroke="#94a3b8" tick={{ fill:'#94a3b8' }} />
-                <YAxis stroke="#94a3b8" tick={{ fill:'#94a3b8' }} tickFormatter={formatNumber} />
-                <RechartsTooltip contentStyle={{ backgroundColor:'#0f172a', border:'1px solid #334155', borderRadius:'0.5rem' }} />
+                <XAxis dataKey="month_label" stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
+                <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} tickFormatter={formatNumber} />
+                <RechartsTooltip contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '0.5rem' }} />
                 {lineKeys.map((key, idx) => (
-                  <Line 
-                    key={key} 
-                    type="monotone" 
-                    dataKey={key} 
-                    name={key.replace('_qty', '')} 
-                    stroke={CHART_COLORS[idx % CHART_COLORS.length]} 
-                    strokeWidth={3} 
-                    dot={{ r:4, fill:'#0f172a', strokeWidth:2 }} 
-                    activeDot={{ r:6 }} 
+                  <Line
+                    key={key}
+                    type="monotone"
+                    dataKey={key}
+                    name={key.replace('_qty', '')}
+                    stroke={CHART_COLORS[idx % CHART_COLORS.length]}
+                    strokeWidth={3}
+                    dot={{ r: 4, fill: '#0f172a', strokeWidth: 2 }}
+                    activeDot={{ r: 6 }}
                   />
                 ))}
               </LineChart>
@@ -289,12 +288,12 @@ export default function TradeInsights() {
         <div className="mt-4 transition-opacity duration-300" style={{ opacity: loading ? 0.6 : 1 }}>
           <ChartCard title={chartTitle}>
             <ResponsiveContainer width="100%" height={400}>
-              <LineChart data={displayData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+              <LineChart data={displayData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-                <XAxis dataKey={categoryKey} stroke="#94a3b8" tick={{ fill:'#94a3b8' }} angle={-45} textAnchor="end" />
-                <YAxis stroke="#94a3b8" tick={{ fill:'#94a3b8' }} tickFormatter={formatNumber} />
-                <RechartsTooltip contentStyle={{ backgroundColor:'#0f172a', border:'1px solid #334155', borderRadius:'0.5rem' }} />
-                <Line type="monotone" dataKey="total_quantity_pcs" name="Quantity (PCS)" stroke="#3b82f6" strokeWidth={3} dot={{ r:4, fill:'#0f172a', strokeWidth:2 }} activeDot={{ r:6 }} />
+                <XAxis dataKey={categoryKey} stroke="#94a3b8" tick={{ fill: '#94a3b8' }} angle={-45} textAnchor="end" />
+                <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} tickFormatter={formatNumber} />
+                <RechartsTooltip contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '0.5rem' }} />
+                <Line type="monotone" dataKey="total_quantity_pcs" name="Quantity (PCS)" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, fill: '#0f172a', strokeWidth: 2 }} activeDot={{ r: 6 }} />
               </LineChart>
             </ResponsiveContainer>
           </ChartCard>
@@ -309,22 +308,22 @@ export default function TradeInsights() {
             <BarChart
               data={displayData}
               layout={isHorizontal ? 'vertical' : 'horizontal'}
-              margin={isHorizontal ? { top:20, right:30, left:100, bottom:5 } : { top:20, right:30, left:20, bottom:80 }}
+              margin={isHorizontal ? { top: 20, right: 30, left: 100, bottom: 5 } : { top: 20, right: 30, left: 20, bottom: 80 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#334155" horizontal={!isHorizontal} vertical={isHorizontal} />
               {isHorizontal ? (
                 <>
-                  <XAxis type="number"   stroke="#94a3b8" tick={{ fill:'#94a3b8' }} tickFormatter={formatNumber} />
-                  <YAxis dataKey={categoryKey} type="category" stroke="#94a3b8" tick={{ fill:'#94a3b8', fontSize:12 }} width={90} />
+                  <XAxis type="number" stroke="#94a3b8" tick={{ fill: '#94a3b8' }} tickFormatter={formatNumber} />
+                  <YAxis dataKey={categoryKey} type="category" stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 12 }} width={90} />
                 </>
               ) : (
                 <>
-                  <XAxis dataKey={categoryKey} stroke="#94a3b8" tick={{ fill:'#94a3b8', fontSize:11 }} angle={-45} textAnchor="end" />
-                  <YAxis stroke="#94a3b8" tick={{ fill:'#94a3b8' }} tickFormatter={formatNumber} />
+                  <XAxis dataKey={categoryKey} stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 11 }} angle={-45} textAnchor="end" />
+                  <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} tickFormatter={formatNumber} />
                 </>
               )}
-              <RechartsTooltip cursor={{ fill:'rgba(59,130,246,0.1)' }} contentStyle={{ backgroundColor:'#0f172a', border:'1px solid #334155', borderRadius:'0.5rem' }} />
-              <Bar dataKey="total_quantity_pcs" name="Quantity (PCS)" fill={barFill} radius={isHorizontal ? [0,4,4,0] : [4,4,0,0]} />
+              <RechartsTooltip cursor={{ fill: 'rgba(59,130,246,0.1)' }} contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '0.5rem' }} />
+              <Bar dataKey="total_quantity_pcs" name="Quantity (PCS)" fill={barFill} radius={isHorizontal ? [0, 4, 4, 0] : [4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -361,11 +360,10 @@ export default function TradeInsights() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-6 py-3 font-medium whitespace-nowrap transition-colors border-b-2 ${
-              activeTab === tab.id
+            className={`px-6 py-3 font-medium whitespace-nowrap transition-colors border-b-2 ${activeTab === tab.id
                 ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
                 : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
-            }`}
+              }`}
           >
             {tab.label}
           </button>
@@ -405,21 +403,19 @@ export default function TradeInsights() {
             <div className="flex bg-slate-100 dark:bg-slate-900/50 p-1 rounded-lg border border-slate-200 dark:border-slate-700">
               <button
                 onClick={() => setViewMode('trend')}
-                className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all ${
-                  viewMode === 'trend'
+                className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all ${viewMode === 'trend'
                     ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'
                     : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
-                }`}
+                  }`}
               >
                 Continuous
               </button>
               <button
                 onClick={() => setViewMode('compare')}
-                className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all ${
-                  viewMode === 'compare'
+                className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all ${viewMode === 'compare'
                     ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm'
                     : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
-                }`}
+                  }`}
               >
                 YoY Compare
               </button>
