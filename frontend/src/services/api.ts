@@ -12,6 +12,21 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Detect network errors or 500+ server errors
+    if (!error.response || error.response.status >= 500) {
+      // Don't trigger for the initial health check endpoints if they fail, wait, we probably DO want to trigger, 
+      // but the initial health check is handled differently. We can ignore /health.
+      if (error.config && !error.config.url?.includes('/health')) {
+        window.dispatchEvent(new CustomEvent('backend-down'));
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export interface BuyerLead {
   id: number;
   hs_code: string;

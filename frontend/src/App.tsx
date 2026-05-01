@@ -85,6 +85,9 @@ const AppContent = () => {
   );
 };
 
+import { BackendProvider } from './context/BackendContext';
+import BackendReconnectOverlay from './components/BackendReconnectOverlay';
+
 const App = () => {
   const { status, isReady, retryCount, manualRetry } = useBackendHealth();
 
@@ -92,7 +95,6 @@ const App = () => {
     return (
       <BackendLoader
         status={status}
-        retryCount={retryCount}
         onRetry={manualRetry}
       />
     );
@@ -100,9 +102,12 @@ const App = () => {
 
   return (
     <ThemeProvider>
-      <Router>
-        <AppContent />
-      </Router>
+      <BackendProvider>
+        <BackendReconnectOverlay />
+        <Router>
+          <AppContent />
+        </Router>
+      </BackendProvider>
     </ThemeProvider>
   );
 };
