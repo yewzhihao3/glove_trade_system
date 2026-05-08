@@ -122,11 +122,35 @@ export interface RecommendedBuyer extends BuyerByProduct {
   is_exact_match: boolean;
 }
 
+export interface AIRecommendationMetrics {
+  matched_products: number;
+  total_orders: number;
+  total_volume: number;
+  last_purchase_date: string;
+}
+
+export interface AIRecommendedBuyer {
+  buyer_name: string;
+  country: string;
+  score: number;
+  confidence_tier: 'High' | 'Medium' | 'Low';
+  primary_match_type: string;
+  reasons: string[];
+  metrics: AIRecommendationMetrics;
+}
+
+export interface AIRecommendationEnvelope {
+  recommendation_version: string;
+  data: AIRecommendedBuyer[];
+}
+
 export interface BuyerFinderParams extends DateParams {
   product_code?: string;
   size?: string;
   country?: string;
   limit?: number;
+  include_existing?: boolean;
+  diversity_mode?: boolean;
 }
 
 export const leadService = {
@@ -283,6 +307,11 @@ export const tradeService = {
 
   getRecommendedBuyers: async (params: BuyerFinderParams): Promise<RecommendedBuyer[]> => {
     const response = await api.get('/analytics/recommended-buyers', { params });
+    return response.data;
+  },
+
+  getAIRecommendedBuyers: async (params: BuyerFinderParams): Promise<AIRecommendationEnvelope> => {
+    const response = await api.get('/analytics/recommended-buyers-ai', { params });
     return response.data;
   }
 };

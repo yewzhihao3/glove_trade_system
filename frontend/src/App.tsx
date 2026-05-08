@@ -65,13 +65,13 @@ const AppContent = () => {
               <Route path="/hscodes" element={<ProtectedRoute><HSCodeIntelligence /></ProtectedRoute>} />
               <Route path="/hscodes/manage" element={<ProtectedRoute><HSCodeManagement /></ProtectedRoute>} />
               <Route path="/leads" element={<ProtectedRoute><SavedLeads /></ProtectedRoute>} />
-              
+
               <Route path="/analytics/dashboard" element={<ProtectedRoute><TradeDashboard /></ProtectedRoute>} />
               <Route path="/analytics/explore" element={<ProtectedRoute><TradeExplore /></ProtectedRoute>} />
               <Route path="/analytics/insights" element={<ProtectedRoute><TradeInsights /></ProtectedRoute>} />
               <Route path="/analytics/buyers" element={<ProtectedRoute><TradeBuyerFinder /></ProtectedRoute>} />
               <Route path="/analytics/upload" element={<ProtectedRoute><TradeUpload /></ProtectedRoute>} />
-              
+
               <Route path="/settings/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
@@ -89,7 +89,7 @@ import { BackendProvider } from './context/BackendContext';
 import BackendReconnectOverlay from './components/BackendReconnectOverlay';
 
 const App = () => {
-  const { status, isReady, retryCount, manualRetry } = useBackendHealth();
+  const { status, isReady, manualRetry } = useBackendHealth();
 
   if (!isReady) {
     return (

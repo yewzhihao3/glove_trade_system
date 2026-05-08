@@ -145,3 +145,21 @@ class BuyerByProductFallbackResponse(BaseModel):
     data: List[BuyerByProductResponse]
     fallback: bool = False
 
+class AIRecommendationMetrics(BaseModel):
+    matched_products: int
+    total_orders: int
+    total_volume: int
+    last_purchase_date: str
+
+class AIRecommendedBuyerResponse(BaseModel):
+    buyer_name: str
+    country: str
+    score: int
+    confidence_tier: str
+    primary_match_type: str
+    reasons: List[str]
+    metrics: AIRecommendationMetrics
+
+class AIRecommendationEnvelope(BaseModel):
+    recommendation_version: str
+    data: List[AIRecommendedBuyerResponse]

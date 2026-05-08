@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from database import get_db
 from schemas import schemas
-from services import analytics_service
+from services import analytics_service, recommendation_engine
 from routes.auth import get_current_user
 
 router = APIRouter(prefix="/analytics", tags=["Analytics"])
@@ -210,4 +210,29 @@ def get_yoy_comparison(
         date_to=date_to, 
         product_code=product_code, 
         country=country
+    )
+
+@router.get("/recommended-buyers-ai", response_model=schemas.AIRecommendationEnvelope)
+def get_recommended_buyers_ai(
+    product_code: Optional[str] = Query(None),
+    size: Optional[str] = Query(None),
+    country: Optional[str] = Query(None),
+    date_from: Optional[str] = Query(None),
+    date_to: Optional[str] = Query(None),
+    limit: int = Query(50, ge=1, le=200),
+    include_existing: bool = Query(False),
+    diversity_mode: bool = Query(False),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    return recommendation_engine.get_ai_recommended_buyers(
+        db,
+        product_code=product_code,
+        size=size,
+        country=country,
+        date_from=date_from,
+        date_to=date_to,
+        limit=limit,
+        include_existing=include_existing,
+        diversity_mode=diversity_mode
     )

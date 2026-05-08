@@ -9,6 +9,7 @@ import {
   filterService,
   type BuyerByProduct,
   type RecommendedBuyer,
+  type AIRecommendedBuyer,
   type BuyerFinderParams,
 } from '../../services/api';
 import DateRangePicker, {
@@ -29,6 +30,7 @@ import {
   Download,
   Package,
   Tag,
+  Zap,
 } from 'lucide-react';
 import { exportToCSV } from '../../utils/export';
 
@@ -47,7 +49,7 @@ function extractSizeFromCode(code: string): string | null {
 }
 
 type SortKey   = 'total_volume' | 'transaction_count' | 'last_purchase';
-type ResultTab = 'top' | 'recommended';
+type ResultTab = 'top' | 'recommended' | 'ai';
 
 // ─── Tooltip ──────────────────────────────────────────────────────────────────
 
@@ -207,6 +209,103 @@ function BuyersTable({ data, matchReason, loading, emptyState }: BuyersTableProp
   );
 }
 
+// ─── AIBuyersTable ────────────────────────────────────────────────────────────
+
+interface AIBuyersTableProps {
+  data: AIRecommendedBuyer[];
+  loading: boolean;
+  emptyState: React.ReactNode;
+}
+
+function AIBuyersTable({ data, loading, emptyState }: AIBuyersTableProps) {
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-20 text-slate-400">
+        <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+        <span className="text-sm">Running AI Recommendation Engine…</span>
+      </div>
+    );
+  }
+
+  if (!data.length) return <>{emptyState}</>;
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-left border-collapse text-sm">
+        <thead>
+          <tr className="bg-slate-100 dark:bg-slate-800/60 text-purple-600 dark:text-purple-400 text-xs font-semibold uppercase tracking-wider">
+            <th className="p-4 border-b border-slate-200 dark:border-slate-700/50 w-10">#</th>
+            <th className="p-4 border-b border-slate-200 dark:border-slate-700/50">Company</th>
+            <th className="p-4 border-b border-slate-200 dark:border-slate-700/50">Score</th>
+            <th className="p-4 border-b border-slate-200 dark:border-slate-700/50">Confidence</th>
+            <th className="p-4 border-b border-slate-200 dark:border-slate-700/50 w-1/3">Why Recommended?</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-200 dark:divide-slate-700/30">
+          {data.map((row, idx) => {
+            const isTop3 = idx < 3;
+            return (
+              <tr
+                key={idx}
+                className={`transition-colors hover:bg-slate-50 dark:hover:bg-slate-700/20 ${
+                  isTop3 ? 'bg-purple-50 dark:bg-purple-950/10' : ''
+                }`}
+              >
+                <td className="p-4">
+                  {isTop3 ? (
+                    <span className="inline-flex w-5 h-5 rounded-full bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 items-center justify-center font-bold text-xs">
+                      {idx + 1}
+                    </span>
+                  ) : (
+                    <span className="text-slate-600 font-mono text-xs">{idx + 1}</span>
+                  )}
+                </td>
+                <td className="p-4">
+                  <span className="text-slate-900 dark:text-slate-100 font-medium truncate block" title={row.buyer_name}>
+                    {row.buyer_name}
+                  </span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">{row.country}</span>
+                  <div className="mt-1 flex items-center gap-2 text-[10px] text-slate-400">
+                    <span title="Orders">{row.metrics.total_orders} orders</span>
+                    <span>•</span>
+                    <span title="Volume">{row.metrics.total_volume.toLocaleString()} pcs</span>
+                  </div>
+                </td>
+                <td className="p-4">
+                  <span className="inline-flex items-center justify-center font-bold text-base px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                    {row.score}
+                  </span>
+                </td>
+                <td className="p-4">
+                  <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold border uppercase tracking-wider ${
+                    row.confidence_tier === 'High' ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20' :
+                    row.confidence_tier === 'Medium' ? 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20' :
+                    'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-700/50 dark:text-slate-400 dark:border-slate-600/40'
+                  }`}>
+                    {row.confidence_tier}
+                  </span>
+                </td>
+                <td className="p-4">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs font-medium text-slate-700 dark:text-slate-300 mb-0.5 border-b border-slate-200 dark:border-slate-700 pb-0.5 inline-block w-max">
+                      Match: {row.primary_match_type.replace(/_/g, ' ')}
+                    </span>
+                    <ul className="list-disc list-inside text-xs text-slate-600 dark:text-slate-400">
+                      {row.reasons.map((r, i) => (
+                        <li key={i}>{r}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function TradeBuyerFinder() {
@@ -223,15 +322,19 @@ export default function TradeBuyerFinder() {
   const [topBuyers,   setTopBuyers]   = useState<BuyerByProduct[]>([]);
   const [searchFallback, setSearchFallback] = useState(false);
   const [recBuyers,   setRecBuyers]   = useState<RecommendedBuyer[]>([]);
+  const [aiRecBuyers, setAiRecBuyers] = useState<AIRecommendedBuyer[]>([]);
+  const [aiVersion,   setAiVersion]   = useState<string | null>(null);
   const [activeTab,   setActiveTab]   = useState<ResultTab>('top');
   const [loadingTop,  setLoadingTop]  = useState(false);
   const [loadingRec,  setLoadingRec]  = useState(false);
+  const [loadingAi,   setLoadingAi]   = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [diversityMode, setDiversityMode] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Derived
-  const hasFilters = productCode.trim() !== '' || size !== '' || country.trim() !== '';
-  const isLoading  = loadingTop || loadingRec;
+  const hasFilters = productCode.trim() !== '' || (size !== '' && size !== 'All') || country.trim() !== '';
+  const isLoading  = loadingTop || loadingRec || loadingAi;
 
   const PRESET_LABELS: Record<string, string> = {
     'last-7':  'Last 7 Days',
@@ -246,18 +349,20 @@ export default function TradeBuyerFinder() {
 
   const buildParams = useCallback((): BuyerFinderParams => ({
     product_code: productCode.trim() || undefined,
-    size:         size || undefined,
+    size:         (size === 'All' ? undefined : size) || undefined,
     country:      country.trim() || undefined,
     date_from:    dateRange.dateFrom ?? undefined,
     date_to:      dateRange.dateTo   ?? undefined,
     limit: 50,
-  }), [productCode, size, country, dateRange]);
+    diversity_mode: diversityMode,
+  }), [productCode, size, country, dateRange, diversityMode]);
 
   const runFetch = useCallback(async () => {
     const params = buildParams();
     setHasSearched(true);
     setLoadingTop(true);
     setLoadingRec(true);
+    setLoadingAi(true);
 
     tradeService.getBuyersByProduct(params)
       .then(res => {
@@ -274,6 +379,17 @@ export default function TradeBuyerFinder() {
       .then(setRecBuyers)
       .catch(() => setRecBuyers([]))
       .finally(() => setLoadingRec(false));
+
+    tradeService.getAIRecommendedBuyers(params)
+      .then(res => {
+        setAiRecBuyers(res.data);
+        setAiVersion(res.recommendation_version);
+      })
+      .catch(() => {
+        setAiRecBuyers([]);
+        setAiVersion(null);
+      })
+      .finally(() => setLoadingAi(false));
   }, [buildParams]);
 
   // Auto-fetch debounced
@@ -281,6 +397,7 @@ export default function TradeBuyerFinder() {
     if (!hasFilters) {
       setTopBuyers([]);
       setRecBuyers([]);
+      setAiRecBuyers([]);
       setSearchFallback(false);
       setHasSearched(false);
       return;
@@ -288,7 +405,7 @@ export default function TradeBuyerFinder() {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(runFetch, 400);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [productCode, size, country, dateRange, hasFilters]);
+  }, [productCode, size, country, dateRange, hasFilters, diversityMode]);
 
   const handleApply = () => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -301,31 +418,35 @@ export default function TradeBuyerFinder() {
     setSize('');
     setSizeManual(false);
     setCountry('');
+    setDiversityMode(false);
     const d = resolvePresetDates(DEFAULT_PRESET);
     setDateRange({ preset: DEFAULT_PRESET, ...d });
     setTopBuyers([]);
     setRecBuyers([]);
+    setAiRecBuyers([]);
     setSearchFallback(false);
     setHasSearched(false);
   };
 
   const handleExport = () => {
-    const data = activeTab === 'top' ? topBuyers : recBuyers;
-    exportToCSV(data, activeTab === 'top' ? 'Top_Buyers' : 'Recommended_Buyers');
+    const data = activeTab === 'top' ? topBuyers : activeTab === 'ai' ? aiRecBuyers : recBuyers;
+    const name = activeTab === 'top' ? 'Top_Buyers' : activeTab === 'ai' ? 'AI_Recommended_Buyers' : 'Recommended_Buyers';
+    exportToCSV(data, name);
   };
 
   // ─── Active filter tags ──────────────────────────────────────────────────────
 
   const activeFilters: { label: string; onRemove: () => void }[] = [];
   if (productCode.trim()) activeFilters.push({ label: `Product: ${productCode.trim()}`, onRemove: () => setProductCode('') });
-  if (size)               activeFilters.push({ label: `Size: ${size}`,                  onRemove: () => setSize('') });
+  if (size && size !== 'All') activeFilters.push({ label: `Size: ${size}`, onRemove: () => setSize('') });
   if (country.trim())     activeFilters.push({ label: `Country: ${country.trim()}`,      onRemove: () => setCountry('') });
   activeFilters.push({ label: `Date: ${dateLabel}`, onRemove: () => {} }); // date is always active, no remove
+  if (diversityMode)      activeFilters.push({ label: `Diversity Mode`, onRemove: () => setDiversityMode(false) });
 
   // ─── Result header string ────────────────────────────────────────────────────
 
-  const currentData   = activeTab === 'top' ? topBuyers : recBuyers;
-  const currentLoading = activeTab === 'top' ? loadingTop : loadingRec;
+  const currentData   = activeTab === 'top' ? topBuyers : activeTab === 'ai' ? aiRecBuyers : recBuyers;
+  const currentLoading = activeTab === 'top' ? loadingTop : activeTab === 'ai' ? loadingAi : loadingRec;
   const buyerWord      = activeTab === 'top' ? 'buyer' : 'prospect';
 
   function resultHeader(): string {
@@ -370,7 +491,7 @@ export default function TradeBuyerFinder() {
       <div>
         <p className="text-slate-800 dark:text-slate-300 font-medium mb-2">No buyers found for the selected filters</p>
         <div className="flex flex-col gap-1.5 text-sm text-slate-600 dark:text-slate-500">
-          {size    && <p>→ Try removing the <button onClick={() => setSize('')}    className="text-emerald-600 dark:text-emerald-400 hover:underline">size filter ({size})</button></p>}
+          {size && size !== 'All' && <p>→ Try removing the <button onClick={() => setSize('')} className="text-emerald-600 dark:text-emerald-400 hover:underline">size filter ({size})</button></p>}
           {productCode && <p>→ Try removing the <button onClick={() => setProductCode('')} className="text-emerald-600 dark:text-emerald-400 hover:underline">product code filter</button></p>}
           <p>→ Try expanding the date range in the filter panel</p>
         </div>
@@ -521,7 +642,13 @@ export default function TradeBuyerFinder() {
                   value={size}
                   onChange={(val) => { setSize(val); setSizeManual(true); }}
                   placeholder="e.g. M, L, XL"
-                  fetchOptions={async () => filterService.getSizes(country.trim() || undefined, productCode.trim() || undefined)}
+                  fetchOptions={async (q) => {
+                    const response = await filterService.getSizes(country.trim() || undefined, productCode.trim() || undefined);
+                    if (!q || 'all'.includes(q.toLowerCase())) {
+                      return { data: ['All', ...response.data], fallback: response.fallback };
+                    }
+                    return response;
+                  }}
                   allowCustomInput
                 />
               </div>
@@ -539,6 +666,28 @@ export default function TradeBuyerFinder() {
                 onChange={setDateRange}
                 mode="panel"
               />
+            </div>
+
+            {/* ── Settings ─────────────────────────── */}
+            <div className="flex flex-col gap-3">
+              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                Settings
+              </p>
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <div className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={diversityMode}
+                    onChange={(e) => setDiversityMode(e.target.checked)}
+                  />
+                  <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-purple-500"></div>
+                </div>
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                  Diversity Mode
+                </span>
+                <InfoTooltip text="Limits the number of recommendations from a single country to highlight a broader variety of prospects." />
+              </label>
             </div>
 
             <div className="border-t border-slate-200 dark:border-slate-700/40" />
@@ -605,10 +754,26 @@ export default function TradeBuyerFinder() {
                 }`}
               >
                 <Sparkles className="w-4 h-4" />
-                Recommended
+                Lookalikes
                 {hasSearched && !loadingRec && (
                   <span className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 text-xs rounded-full">
                     {recBuyers.length}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab('ai')}
+                className={`flex items-center gap-2 px-5 py-3 text-sm font-medium transition-colors border-b-2 ${
+                  activeTab === 'ai'
+                    ? 'border-purple-600 dark:border-purple-500 text-purple-600 dark:text-purple-400'
+                    : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
+                }`}
+              >
+                <Zap className="w-4 h-4" />
+                AI Recommended
+                {hasSearched && !loadingAi && (
+                  <span className="px-1.5 py-0.5 bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 text-xs rounded-full">
+                    {aiRecBuyers.length}
                   </span>
                 )}
               </button>
@@ -629,7 +794,21 @@ export default function TradeBuyerFinder() {
           {activeTab === 'recommended' && hasSearched && !loadingRec && recBuyers.length > 0 && (
             <div className="flex items-start gap-2 bg-blue-500/5 border border-blue-500/20 rounded-xl px-4 py-3 text-xs text-blue-300/80">
               <Info className="w-3.5 h-3.5 mt-0.5 shrink-0 text-blue-400" />
-              Recommended buyers are identified based on similar product patterns and historical purchase behaviour.
+              Lookalike buyers are identified based on similar product patterns and historical purchase behaviour.
+            </div>
+          )}
+
+          {activeTab === 'ai' && hasSearched && !loadingAi && aiRecBuyers.length > 0 && (
+            <div className="flex items-center justify-between bg-purple-500/5 border border-purple-500/20 rounded-xl px-4 py-3 text-xs text-purple-600 dark:text-purple-300/80">
+              <div className="flex items-start gap-2">
+                <Info className="w-3.5 h-3.5 mt-0.5 shrink-0 text-purple-500 dark:text-purple-400" />
+                AI Engine scores prospects using a multi-factor weighted algorithm, applying decay to inactive accounts and excluding existing buyers of this exact configuration.
+              </div>
+              {aiVersion && (
+                <span className="font-mono text-[10px] bg-purple-500/10 text-purple-500 dark:text-purple-400 px-2 py-0.5 rounded-md">
+                  Engine {aiVersion}
+                </span>
+              )}
             </div>
           )}
 
@@ -651,12 +830,20 @@ export default function TradeBuyerFinder() {
               </div>
             )}
 
-            <BuyersTable
-              data={currentData}
-              matchReason={activeTab === 'recommended'}
-              loading={currentLoading}
-              emptyState={activeTab === 'top' ? topEmptyState : recEmptyState}
-            />
+            {activeTab === 'ai' ? (
+              <AIBuyersTable
+                data={aiRecBuyers}
+                loading={loadingAi}
+                emptyState={recEmptyState}
+              />
+            ) : (
+              <BuyersTable
+                data={currentData as BuyerByProduct[]}
+                matchReason={activeTab === 'recommended'}
+                loading={currentLoading}
+                emptyState={activeTab === 'top' ? topEmptyState : recEmptyState}
+              />
+            )}
           </div>
 
         </div>
