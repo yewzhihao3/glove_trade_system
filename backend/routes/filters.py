@@ -6,6 +6,8 @@ from database import get_db
 from models import models
 from schemas import schemas
 from routes.auth import get_current_user
+from sqlalchemy import or_
+from utils.product_normalizer import extract_base_product_code
 
 router = APIRouter(prefix="/filters", tags=["Filters"])
 
@@ -67,7 +69,11 @@ def get_countries(
         if search:
             q = q.filter(models.TradeHistory.ship_to_country.ilike(f"%{search}%"))
         if use_product and product_code:
-            q = q.filter(models.TradeHistory.product_code.ilike(product_code))
+            base_code = extract_base_product_code(product_code)
+            q = q.filter(or_(
+                models.TradeHistory.product_code == base_code,
+                models.TradeHistory.product_code.like(f"{base_code}-%")
+            ))
         if use_size and size:
             q = q.filter(models.TradeHistory.size.ilike(size))
         results = q.order_by(models.TradeHistory.ship_to_country).limit(limit).all()
@@ -105,7 +111,11 @@ def get_sizes(
             models.TradeHistory.size != "",
         )
         if use_product and product_code:
-            q = q.filter(models.TradeHistory.product_code.ilike(product_code))
+            base_code = extract_base_product_code(product_code)
+            q = q.filter(or_(
+                models.TradeHistory.product_code == base_code,
+                models.TradeHistory.product_code.like(f"{base_code}-%")
+            ))
         if use_country and country:
             q = q.filter(models.TradeHistory.ship_to_country.ilike(country))
 

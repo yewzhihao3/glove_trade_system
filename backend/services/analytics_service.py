@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, Query
 from sqlalchemy import func, or_, String
 from typing import List, Dict, Optional
 from models import models
@@ -6,6 +6,7 @@ from datetime import datetime
 from collections import defaultdict
 from cachetools import TTLCache
 import logging
+from utils.product_normalizer import extract_base_product_code
 
 logger = logging.getLogger("uvicorn")
 
@@ -14,7 +15,7 @@ yoy_cache = TTLCache(maxsize=100, ttl=3600)
 
 # ─── Shared date-filter helper ────────────────────────────────────────────────
 
-def _apply_date_filter(query, date_from: Optional[str], date_to: Optional[str]):
+def _apply_date_filter(query: Query, date_from: Optional[str], date_to: Optional[str]) -> Query:
     """Apply posting_date range filters to any query."""
     if date_from:
         query = query.filter(models.TradeHistory.posting_date >= date_from)
@@ -291,19 +292,7 @@ def get_buyers_by_product(
     ]
 
 
-def _extract_prefix(product_code: str) -> str:
-    """Strip the last dash-segment (usually size/variant) to get a product-family prefix.
-
-    Examples:
-        G-OCEF55NBAB-L  → G-OCEF55NBAB
-        GLOVE-NBR-M     → GLOVE-NBR
-        G-OCEF55NBAB    → G-OCEF55NBAB   (no variant segment, keep as-is)
-        NITRILE         → NITRILE        (no dash, keep full code)
-    """
-    parts = product_code.split("-")
-    if len(parts) >= 2:
-        return "-".join(parts[:-1])   # drop last segment (size / colour / variant)
-    return product_code[:8]           # fallback for codes without dashes
+# _extract_prefix has been centralized into utils.product_normalizer
 
 
 def get_recommended_buyers(
@@ -333,8 +322,11 @@ def get_recommended_buyers(
     prefix       = None
 
     if product_code:
-        prefix = _extract_prefix(product_code)
-        conditions.append(models.TradeHistory.product_code.like(f"{prefix}%"))
+        prefix = extract_base_product_code(product_code)
+        conditions.append(or_(
+            models.TradeHistory.product_code == prefix,
+            models.TradeHistory.product_code.like(f"{prefix}-%")
+        ))
         log.info(f"[RecommendedBuyers] product_code={product_code!r}  →  prefix={prefix!r}")
 
     if size and not product_code:

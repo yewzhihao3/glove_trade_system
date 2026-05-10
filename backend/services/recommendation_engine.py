@@ -6,15 +6,10 @@ from datetime import datetime
 import math
 from models import models
 from schemas import schemas
+from . import recommendation_narrative
+from utils.product_normalizer import extract_base_product_code
 
 logger = logging.getLogger("uvicorn")
-
-def _extract_prefix(product_code: str) -> str:
-    """Strip the last dash-segment (usually size/variant) to get a product-family prefix."""
-    parts = product_code.split("-")
-    if len(parts) >= 2:
-        return "-".join(parts[:-1])
-    return product_code[:8]
 
 def get_ai_recommended_buyers(
     db: Session,
@@ -34,8 +29,11 @@ def get_ai_recommended_buyers(
     size_upper = size.strip().upper() if size else None
     
     if product_code:
-        prefix = _extract_prefix(product_code)
-        conditions.append(models.TradeHistory.product_code.like(f"{prefix}%"))
+        prefix = extract_base_product_code(product_code)
+        conditions.append(or_(
+            models.TradeHistory.product_code == prefix,
+            models.TradeHistory.product_code.like(f"{prefix}-%")
+        ))
     if size_upper:
         conditions.append(func.upper(func.trim(models.TradeHistory.size)) == size_upper)
     if country:
@@ -69,7 +67,13 @@ def get_ai_recommended_buyers(
         exact_match_buyers = {r[0] for r in exact_buyers if r[0]}
 
     # 3. Aggregate candidate metrics
-    product_case = case((models.TradeHistory.product_code.like(f"{prefix}%"), 1), else_=0) if prefix else 0
+    product_case = case(
+        (or_(
+            models.TradeHistory.product_code == prefix,
+            models.TradeHistory.product_code.like(f"{prefix}-%")
+        ), 1),
+        else_=0
+    ) if prefix else 0
     size_case = case((func.upper(func.trim(models.TradeHistory.size)) == size_upper, 1), else_=0) if size_upper else 0
     country_case = case((models.TradeHistory.ship_to_country.ilike(country), 1), else_=0) if country else 0
     
@@ -97,9 +101,36 @@ def get_ai_recommended_buyers(
     if not results:
         return schemas.AIRecommendationEnvelope(recommendation_version="v1", data=[])
 
-    # 4. Global Min/Max for Normalization
+    # 4. Global Min/Max for Normalization & Dominant Size Query
     max_orders = max((r.total_orders for r in results if r.total_orders), default=1)
     max_volume = max((r.total_volume for r in results if r.total_volume), default=1)
+
+    dominant_sizes = {}
+    variant_diversity = {}
+    if results:
+        size_q = db.query(
+            models.TradeHistory.company_name,
+            func.upper(func.trim(models.TradeHistory.size)).label('size'),
+            func.count(models.TradeHistory.id).label('size_count')
+        ).filter(*base_filters).filter(or_(*conditions))\
+         .group_by(models.TradeHistory.company_name, func.upper(func.trim(models.TradeHistory.size)))\
+         .all()
+         
+        for comp, sz, cnt in size_q:
+            if not sz:
+                continue
+            
+            # Track diversity
+            if comp not in variant_diversity:
+                variant_diversity[comp] = 0
+            variant_diversity[comp] += 1
+            
+            # Track dominant size
+            if comp not in dominant_sizes:
+                dominant_sizes[comp] = (sz, cnt)
+            else:
+                if cnt > dominant_sizes[comp][1]:
+                    dominant_sizes[comp] = (sz, cnt)
 
     today = datetime.now()
     if date_to:
@@ -186,26 +217,54 @@ def get_ai_recommended_buyers(
         }
         primary_match_type = max(components.items(), key=lambda x: x[1])[0]
         
-        reasons = []
-        if product_score == 40:
-            reasons.append("Purchased exact product previously")
-        elif product_score > 0:
-            reasons.append(f"Purchased similar products in the '{prefix}' category")
-            
-        if size_score > 0:
-            reasons.append(f"Frequently buys Size {size_upper} products")
-            
-        if country_score > 0:
-            reasons.append(f"Located in target country ({country})")
-            
-        if freq_score > 10:
-            reasons.append("High recurring order activity")
-            
-        if recency_days <= 90:
-            reasons.append("Active within recent months")
-            
-        if vol_score > 7:
-            reasons.append("Large historical purchase volume")
+        scores_dict = {
+            'product': product_score,
+            'size': size_score,
+            'country': country_score,
+            'freq': freq_score,
+            'rec': rec_score,
+            'vol': vol_score
+        }
+        
+        # --- Intelligence Generation ---
+        actual_dominant_size = dominant_sizes.get(r.company_name, (None, 0))[0]
+        diversity = variant_diversity.get(r.company_name, 0)
+        display_size = actual_dominant_size if actual_dominant_size else size_upper
+        
+        archetype = recommendation_narrative.generate_archetype(
+            total_orders=r.total_orders or 0,
+            total_volume=r.total_volume or 0,
+            recency_days=recency_days,
+            country_score=country_score,
+            size_score=size_score
+        )
+        
+        activity_status = recommendation_narrative.generate_activity_status(recency_days, r.total_orders or 0)
+        rec_strength = recommendation_narrative.generate_recommendation_strength(final_score)
+        
+        opportunity_signals = recommendation_narrative.generate_opportunity_signals(
+            scores=scores_dict,
+            recency_days=recency_days,
+            country=country,
+            size=display_size,
+            variant_diversity=diversity
+        )
+        
+        behavioral_metrics = recommendation_narrative.generate_behavioral_metrics(
+            total_orders=r.total_orders or 0,
+            total_volume=r.total_volume or 0,
+            recency_days=recency_days,
+            size=display_size,
+            freq_score=freq_score,
+            variant_diversity=diversity
+        )
+        
+        insight_summary = recommendation_narrative.generate_insight_summary(
+            archetype=archetype,
+            prefix=prefix,
+            country=r.ship_to_country or "Unknown",
+            size=display_size
+        )
 
         scored_candidates.append({
             "buyer_name": r.company_name,
@@ -213,7 +272,12 @@ def get_ai_recommended_buyers(
             "score": final_score,
             "confidence_tier": confidence,
             "primary_match_type": primary_match_type,
-            "reasons": reasons,
+            "archetype": archetype,
+            "activity_status": activity_status,
+            "recommendation_strength": rec_strength,
+            "insight_summary": insight_summary,
+            "opportunity_signals": opportunity_signals,
+            "behavioral_metrics": behavioral_metrics,
             "metrics": schemas.AIRecommendationMetrics(
                 matched_products=r.matched_products,
                 total_orders=r.total_orders,

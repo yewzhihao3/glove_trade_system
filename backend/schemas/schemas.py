@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict
-from typing import List, Optional
+from typing import List, Optional, Literal
 from datetime import datetime
 
 class HSCodeBase(BaseModel):
@@ -151,13 +151,30 @@ class AIRecommendationMetrics(BaseModel):
     total_volume: int
     last_purchase_date: str
 
+class BehavioralMetrics(BaseModel):
+    avg_order_volume: str
+    purchase_frequency: str
+    activity_window: str
+    dominant_size: Optional[str]
+    repeat_order_score: float
+    variant_diversity_score: int
+
 class AIRecommendedBuyerResponse(BaseModel):
     buyer_name: str
     country: str
     score: int
     confidence_tier: str
     primary_match_type: str
-    reasons: List[str]
+    
+    # Intelligence Fields
+    archetype: str
+    activity_status: Literal["HOT", "ACTIVE", "WARM", "COLD"]
+    recommendation_strength: str
+    insight_summary: str
+    opportunity_signals: List[str]
+    behavioral_metrics: BehavioralMetrics
+    
+    # Raw Metrics
     metrics: AIRecommendationMetrics
 
 class AIRecommendationEnvelope(BaseModel):

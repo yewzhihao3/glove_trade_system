@@ -12,11 +12,13 @@ import {
   type AIRecommendedBuyer,
   type BuyerFinderParams,
 } from '../../services/api';
-import DateRangePicker, {
+import {
   type DateRangeValue,
   resolvePresetDates,
 } from '../../components/DateRangePicker';
+import DateRangePicker from '../../components/DateRangePicker';
 import SearchableSelect from '../../components/SearchableSelect';
+import AIProspectCard from '../../components/analytics/AIProspectCard';
 import {
   Search,
   RotateCcw,
@@ -209,102 +211,7 @@ function BuyersTable({ data, matchReason, loading, emptyState }: BuyersTableProp
   );
 }
 
-// ─── AIBuyersTable ────────────────────────────────────────────────────────────
-
-interface AIBuyersTableProps {
-  data: AIRecommendedBuyer[];
-  loading: boolean;
-  emptyState: React.ReactNode;
-}
-
-function AIBuyersTable({ data, loading, emptyState }: AIBuyersTableProps) {
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-3 py-20 text-slate-400">
-        <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
-        <span className="text-sm">Running AI Recommendation Engine…</span>
-      </div>
-    );
-  }
-
-  if (!data.length) return <>{emptyState}</>;
-
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-left border-collapse text-sm">
-        <thead>
-          <tr className="bg-slate-100 dark:bg-slate-800/60 text-purple-600 dark:text-purple-400 text-xs font-semibold uppercase tracking-wider">
-            <th className="p-4 border-b border-slate-200 dark:border-slate-700/50 w-10">#</th>
-            <th className="p-4 border-b border-slate-200 dark:border-slate-700/50">Company</th>
-            <th className="p-4 border-b border-slate-200 dark:border-slate-700/50">Score</th>
-            <th className="p-4 border-b border-slate-200 dark:border-slate-700/50">Confidence</th>
-            <th className="p-4 border-b border-slate-200 dark:border-slate-700/50 w-1/3">Why Recommended?</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-200 dark:divide-slate-700/30">
-          {data.map((row, idx) => {
-            const isTop3 = idx < 3;
-            return (
-              <tr
-                key={idx}
-                className={`transition-colors hover:bg-slate-50 dark:hover:bg-slate-700/20 ${
-                  isTop3 ? 'bg-purple-50 dark:bg-purple-950/10' : ''
-                }`}
-              >
-                <td className="p-4">
-                  {isTop3 ? (
-                    <span className="inline-flex w-5 h-5 rounded-full bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 items-center justify-center font-bold text-xs">
-                      {idx + 1}
-                    </span>
-                  ) : (
-                    <span className="text-slate-600 font-mono text-xs">{idx + 1}</span>
-                  )}
-                </td>
-                <td className="p-4">
-                  <span className="text-slate-900 dark:text-slate-100 font-medium truncate block" title={row.buyer_name}>
-                    {row.buyer_name}
-                  </span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400">{row.country}</span>
-                  <div className="mt-1 flex items-center gap-2 text-[10px] text-slate-400">
-                    <span title="Orders">{row.metrics.total_orders} orders</span>
-                    <span>•</span>
-                    <span title="Volume">{row.metrics.total_volume.toLocaleString()} pcs</span>
-                  </div>
-                </td>
-                <td className="p-4">
-                  <span className="inline-flex items-center justify-center font-bold text-base px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                    {row.score}
-                  </span>
-                </td>
-                <td className="p-4">
-                  <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold border uppercase tracking-wider ${
-                    row.confidence_tier === 'High' ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20' :
-                    row.confidence_tier === 'Medium' ? 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20' :
-                    'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-700/50 dark:text-slate-400 dark:border-slate-600/40'
-                  }`}>
-                    {row.confidence_tier}
-                  </span>
-                </td>
-                <td className="p-4">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-xs font-medium text-slate-700 dark:text-slate-300 mb-0.5 border-b border-slate-200 dark:border-slate-700 pb-0.5 inline-block w-max">
-                      Match: {row.primary_match_type.replace(/_/g, ' ')}
-                    </span>
-                    <ul className="list-disc list-inside text-xs text-slate-600 dark:text-slate-400">
-                      {row.reasons.map((r, i) => (
-                        <li key={i}>{r}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-  );
-}
+// AIBuyersTable has been replaced by AIProspectCard
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
@@ -831,11 +738,20 @@ export default function TradeBuyerFinder() {
             )}
 
             {activeTab === 'ai' ? (
-              <AIBuyersTable
-                data={aiRecBuyers}
-                loading={loadingAi}
-                emptyState={recEmptyState}
-              />
+              loadingAi ? (
+                <div className="flex flex-col items-center justify-center gap-3 py-20 text-slate-400">
+                  <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+                  <span className="text-sm">Running AI Recommendation Engine…</span>
+                </div>
+              ) : aiRecBuyers.length === 0 ? (
+                <>{recEmptyState}</>
+              ) : (
+                <div className="flex flex-col gap-4 p-5">
+                  {aiRecBuyers.map((buyer, idx) => (
+                    <AIProspectCard key={idx} buyer={buyer} index={idx} />
+                  ))}
+                </div>
+              )
             ) : (
               <BuyersTable
                 data={currentData as BuyerByProduct[]}

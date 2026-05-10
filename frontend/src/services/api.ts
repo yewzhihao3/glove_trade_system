@@ -129,13 +129,27 @@ export interface AIRecommendationMetrics {
   last_purchase_date: string;
 }
 
+export interface BehavioralMetrics {
+  avg_order_volume: string;
+  purchase_frequency: string;
+  activity_window: string;
+  dominant_size: string | null;
+  repeat_order_score: number;
+  variant_diversity_score: number;
+}
+
 export interface AIRecommendedBuyer {
   buyer_name: string;
   country: string;
   score: number;
   confidence_tier: 'High' | 'Medium' | 'Low';
   primary_match_type: string;
-  reasons: string[];
+  archetype: string;
+  activity_status: 'HOT' | 'ACTIVE' | 'WARM' | 'COLD';
+  recommendation_strength: string;
+  insight_summary: string;
+  opportunity_signals: string[];
+  behavioral_metrics: BehavioralMetrics;
   metrics: AIRecommendationMetrics;
 }
 
