@@ -44,7 +44,7 @@ app.include_router(analytics_router)
 app.include_router(filters_router)
 app.include_router(ai_router)
 
-@app.get("/health")
+@app.api_route("/health", methods=["GET", "HEAD"])
 def health_check(db: Session = Depends(get_db)):
     try:
         # Perform a lightweight database verification to keep Supabase active
