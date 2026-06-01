@@ -25,16 +25,27 @@ export default function TradeInsights() {
   const { user } = useAuth();
   // Tab & metric
   const [activeTab, setActiveTab] = useState<TabCategory>('Buyers');
-  const [activeMetric, setActiveMetric] = useState<string>('top-buyers');
-  const [viewMode, setViewMode] = useState<'trend' | 'compare'>('trend');
+  const [draftActiveMetric, setDraftActiveMetric] = useState<string>('top-buyers');
+  const [draftViewMode, setDraftViewMode] = useState<'trend' | 'compare'>('trend');
 
   // Date range — defaults to "Last 30 Days"
   const initialPreset = resolvePresetDates('last-30');
-  const [dateRange, setDateRange] = useState<DateRangeValue>({
+  const [draftDateRange, setDraftDateRange] = useState<DateRangeValue>({
     preset: 'last-30',
     dateFrom: initialPreset.dateFrom,
     dateTo: initialPreset.dateTo,
   });
+
+  // Potential-buyers filters
+  const [draftMinTransactions, setDraftMinTransactions] = useState<number>(1);
+  const [draftMinValue, setDraftMinValue] = useState<number>(0);
+
+  // Applied State (Drives the fetch)
+  const [appliedDateRange, setAppliedDateRange] = useState<DateRangeValue>(draftDateRange);
+  const [appliedActiveMetric, setAppliedActiveMetric] = useState<string>(draftActiveMetric);
+  const [appliedViewMode, setAppliedViewMode] = useState<'trend' | 'compare'>(draftViewMode);
+  const [appliedMinTransactions, setAppliedMinTransactions] = useState<number>(draftMinTransactions);
+  const [appliedMinValue, setAppliedMinValue] = useState<number>(draftMinValue);
 
   // Data
   const [chartData, setChartData] = useState<AnalyticalResult[]>([]);
@@ -42,9 +53,22 @@ export default function TradeInsights() {
   const [potentialBuyers, setPotentialBuyers] = useState<PotentialBuyer[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Potential-buyers filters
-  const [minTransactions, setMinTransactions] = useState<number>(1);
-  const [minValue, setMinValue] = useState<number>(0);
+  const isDirty = 
+    draftDateRange.preset !== appliedDateRange.preset ||
+    draftDateRange.dateFrom !== appliedDateRange.dateFrom ||
+    draftDateRange.dateTo !== appliedDateRange.dateTo ||
+    draftActiveMetric !== appliedActiveMetric ||
+    draftViewMode !== appliedViewMode ||
+    draftMinTransactions !== appliedMinTransactions ||
+    draftMinValue !== appliedMinValue;
+
+  const handleApply = () => {
+    setAppliedDateRange(draftDateRange);
+    setAppliedActiveMetric(draftActiveMetric);
+    setAppliedViewMode(draftViewMode);
+    setAppliedMinTransactions(draftMinTransactions);
+    setAppliedMinValue(draftMinValue);
+  };
 
   // Debounce ref so rapid filter changes don't fire many requests
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -89,30 +113,35 @@ export default function TradeInsights() {
 
   // ─── Effects ─────────────────────────────────────────────────────────────────
 
-  // When the tab changes, auto-select its first metric
+  // When the tab changes, auto-select its first metric and apply immediately
   useEffect(() => {
     const defaultMetric = TABS.find(t => t.id === activeTab)?.metrics[0].value;
-    if (defaultMetric) setActiveMetric(defaultMetric);
+    if (defaultMetric) {
+      setDraftActiveMetric(defaultMetric);
+      setAppliedActiveMetric(defaultMetric);
+      // Also apply any pending draft dates so tab switch feels like a full "apply"
+      setAppliedDateRange(draftDateRange);
+      setAppliedViewMode(draftViewMode);
+    }
   }, [activeTab]);
 
-  // Fetch whenever metric, date range, or potential-buyer filters change
-  // Fetch whenever metric, date range, or mode changes
-  // Debounced to avoid double-firing on activeTab → activeMetric cascade
+  // Fetch whenever applied state changes
   useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => fetchActiveData(), 80);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [activeMetric, dateRange, minTransactions, minValue, viewMode]);
+    const controller = new AbortController();
+    fetchActiveData(controller.signal);
+    return () => controller.abort();
+  }, [appliedActiveMetric, appliedDateRange, appliedMinTransactions, appliedMinValue, appliedViewMode]);
 
   // ─── Fetch ───────────────────────────────────────────────────────────────────
 
-  const fetchActiveData = async () => {
+  const fetchActiveData = async (signal: AbortSignal) => {
     setLoading(true);
-    const dates = buildDateParams(dateRange);
+    const dates = buildDateParams(appliedDateRange);
+    dates.signal = signal;
 
     try {
-      if (activeMetric === 'potential-buyers') {
-        const pb = await tradeService.getPotentialBuyers(minTransactions, minValue, dates);
+      if (appliedActiveMetric === 'potential-buyers') {
+        const pb = await tradeService.getPotentialBuyers(appliedMinTransactions, appliedMinValue, dates);
         setPotentialBuyers(pb);
         return;
       }
@@ -120,10 +149,10 @@ export default function TradeInsights() {
       let res: any[] = [];
 
       // Handle special Compare mode
-      if (viewMode === 'compare' && (activeMetric === 'monthly-trend' || activeMetric === 'yearly-trend')) {
+      if (appliedViewMode === 'compare' && (appliedActiveMetric === 'monthly-trend' || appliedActiveMetric === 'yearly-trend')) {
         res = await tradeService.getYoyComparison(dates);
       } else {
-        switch (activeMetric) {
+        switch (appliedActiveMetric) {
           case 'top-buyers': res = await tradeService.getTopBuyers(20, dates); break;
           case 'top-products': res = await tradeService.getTopProducts(20, dates); break;
           case 'top-sizes': res = await tradeService.getTopSizes(20, dates); break;
@@ -137,7 +166,8 @@ export default function TradeInsights() {
 
       setPrevData(res);   // keep for smooth transition
       setChartData(res);
-    } catch (err) {
+    } catch (err: any) {
+      if (err.name === 'CanceledError' || err.name === 'AbortError') return;
       console.error(err);
     } finally {
       setLoading(false);
@@ -147,10 +177,10 @@ export default function TradeInsights() {
   // ─── Helpers ─────────────────────────────────────────────────────────────────
 
   const handleExport = () => {
-    if (activeMetric === 'potential-buyers') {
+    if (appliedActiveMetric === 'potential-buyers') {
       exportToCSV(potentialBuyers, 'Potential_Buyers_Report');
     } else {
-      exportToCSV(chartData, `${activeMetric}_Report`);
+      exportToCSV(chartData, `${appliedActiveMetric}_Report`);
     }
   };
 
@@ -163,7 +193,7 @@ export default function TradeInsights() {
     // While loading, show previous data faded so there's no blank flash
     const displayData = loading ? prevData : chartData;
 
-    if (activeMetric === 'potential-buyers') {
+    if (appliedActiveMetric === 'potential-buyers') {
       return (
         <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-xl overflow-hidden mt-4 transition-opacity duration-300 shadow-sm dark:shadow-none" style={{ opacity: loading ? 0.6 : 1 }}>
           <div className="p-4 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 flex flex-wrap items-center gap-4">
@@ -173,8 +203,8 @@ export default function TradeInsights() {
               <input
                 type="number" min="1"
                 className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded px-2 py-1 w-20 text-sm outline-none focus:border-emerald-500 transition-colors"
-                value={minTransactions}
-                onChange={(e) => setMinTransactions(Number(e.target.value) || 1)}
+                value={draftMinTransactions}
+                onChange={(e) => setDraftMinTransactions(Number(e.target.value) || 1)}
               />
             </div>
             <div className="flex items-center gap-2">
@@ -182,10 +212,23 @@ export default function TradeInsights() {
               <input
                 type="number" min="0"
                 className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded px-2 py-1 w-24 text-sm outline-none focus:border-emerald-500 transition-colors"
-                value={minValue}
-                onChange={(e) => setMinValue(Number(e.target.value) || 0)}
+                value={draftMinValue}
+                onChange={(e) => setDraftMinValue(Number(e.target.value) || 0)}
               />
             </div>
+            
+            <div className="flex-1" />
+            <button
+              onClick={handleApply}
+              disabled={!isDirty || loading}
+              className={`text-xs px-3 py-1.5 rounded font-medium transition-colors ${
+                isDirty && !loading
+                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                  : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+              }`}
+            >
+              {loading ? 'Applying...' : 'Apply Filter'}
+            </button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse whitespace-nowrap">
@@ -241,16 +284,16 @@ export default function TradeInsights() {
       'yearly-trend': 'year',
       'top-salespeople': 'salesperson',
     };
-    const categoryKey = KEY_MAP[activeMetric] ?? 'company_name';
-    const isHorizontal = ['top-countries', 'top-products', 'top-sizes', 'top-items', 'top-salespeople'].includes(activeMetric);
-    const isTrend = activeMetric.includes('trend');
-    const chartTitle = TABS.flatMap(t => t.metrics).find(m => m.value === activeMetric)?.label ?? 'Analysis';
-    const barFill = ['top-products', 'top-sizes', 'top-items'].includes(activeMetric) ? '#10b981' : '#3b82f6';
+    const categoryKey = KEY_MAP[appliedActiveMetric] ?? 'company_name';
+    const isHorizontal = ['top-countries', 'top-products', 'top-sizes', 'top-items', 'top-salespeople'].includes(appliedActiveMetric);
+    const isTrend = appliedActiveMetric.includes('trend');
+    const chartTitle = TABS.flatMap(t => t.metrics).find(m => m.value === appliedActiveMetric)?.label ?? 'Analysis';
+    const barFill = ['top-products', 'top-sizes', 'top-items'].includes(appliedActiveMetric) ? '#10b981' : '#3b82f6';
 
     // Dynamic Colors for Multi-line
     const CHART_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'];
 
-    if (isTrend && viewMode === 'compare') {
+    if (isTrend && appliedViewMode === 'compare') {
       const lineKeys = displayData.length > 0
         ? Object.keys(displayData[0]).filter(k => k.endsWith('_qty')).sort()
         : [];
@@ -375,8 +418,8 @@ export default function TradeInsights() {
 
         {/* Date Range Picker */}
         <DateRangePicker
-          value={dateRange}
-          onChange={(v) => setDateRange(v)}
+          value={draftDateRange}
+          onChange={(v) => setDraftDateRange(v)}
         />
 
         {/* Divider */}
@@ -386,8 +429,8 @@ export default function TradeInsights() {
         <div className="flex items-center gap-3">
           <span className="text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap">Select Metric:</span>
           <select
-            value={activeMetric}
-            onChange={(e) => setActiveMetric(e.target.value)}
+            value={draftActiveMetric}
+            onChange={(e) => setDraftActiveMetric(e.target.value)}
             className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 px-3 py-2 rounded-lg text-sm outline-none focus:border-emerald-500 cursor-pointer shadow-inner w-48 md:w-64"
           >
             {TABS.find(t => t.id === activeTab)?.metrics.map(m => (
@@ -397,13 +440,13 @@ export default function TradeInsights() {
         </div>
 
         {/* Mode Toggle (Only show for Trends) */}
-        {(activeMetric === 'monthly-trend' || activeMetric === 'yearly-trend') && (
+        {(draftActiveMetric === 'monthly-trend' || draftActiveMetric === 'yearly-trend') && (
           <>
             <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 hidden md:block" />
             <div className="flex bg-slate-100 dark:bg-slate-900/50 p-1 rounded-lg border border-slate-200 dark:border-slate-700">
               <button
-                onClick={() => setViewMode('trend')}
-                className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all ${viewMode === 'trend'
+                onClick={() => setDraftViewMode('trend')}
+                className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all ${draftViewMode === 'trend'
                     ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'
                     : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
                   }`}
@@ -411,8 +454,8 @@ export default function TradeInsights() {
                 Continuous
               </button>
               <button
-                onClick={() => setViewMode('compare')}
-                className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all ${viewMode === 'compare'
+                onClick={() => setDraftViewMode('compare')}
+                className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all ${draftViewMode === 'compare'
                     ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm'
                     : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
                   }`}
@@ -423,10 +466,27 @@ export default function TradeInsights() {
           </>
         )}
 
-        {/* Loading indicator */}
-        {loading && (
-          <span className="text-xs text-slate-500 animate-pulse ml-auto">Refreshing data…</span>
-        )}
+        <div className="flex-1" />
+
+        {/* Apply Button */}
+        <button
+          onClick={handleApply}
+          disabled={!isDirty || loading}
+          className={`flex items-center gap-2 px-5 py-2 rounded-lg font-semibold transition-all ${
+            isDirty && !loading
+              ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed border border-slate-200 dark:border-slate-700'
+          }`}
+        >
+          {loading ? (
+            <>
+              <div className="w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+              Applying...
+            </>
+          ) : (
+            'Apply Filters'
+          )}
+        </button>
       </div>
 
       {/* ── Chart / Table content ────────────────────────────────────── */}

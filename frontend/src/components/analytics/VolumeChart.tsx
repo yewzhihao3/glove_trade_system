@@ -9,6 +9,7 @@ export interface VolumeChartProps {
   dateRange: DateRangeValue;
   viewMode: 'trend' | 'compare';
   aggregation: 'monthly' | 'yearly';
+  onLoadChange?: (isLoading: boolean) => void;
 }
 
 const formatNumber = (num: number) => {
@@ -20,19 +21,23 @@ const formatNumber = (num: number) => {
 
 const CHART_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'];
 
-const VolumeChart: React.FC<VolumeChartProps> = ({ dateRange, viewMode, aggregation }) => {
+const VolumeChart: React.FC<VolumeChartProps> = ({ dateRange, viewMode, aggregation, onLoadChange }) => {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeYears, setActiveYears] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     let active = true;
+    const controller = new AbortController();
+    
     const fetchChartData = async () => {
       setLoading(true);
+      onLoadChange?.(true);
       try {
         const dates: DateParams = {
           date_from: dateRange.dateFrom || undefined,
-          date_to: dateRange.dateTo || undefined
+          date_to: dateRange.dateTo || undefined,
+          signal: controller.signal
         };
 
         let res: any[] = [];
@@ -55,14 +60,21 @@ const VolumeChart: React.FC<VolumeChartProps> = ({ dateRange, viewMode, aggregat
         if (active) {
           setData(res);
         }
-      } catch (error) {
+      } catch (error: any) {
+        if (error.name === 'CanceledError' || error.name === 'AbortError') return;
         console.error('Failed to load chart data', error);
       } finally {
-        if (active) setLoading(false);
+        if (active) {
+          setLoading(false);
+          onLoadChange?.(false);
+        }
       }
     };
     fetchChartData();
-    return () => { active = false; };
+    return () => { 
+      active = false; 
+      controller.abort();
+    };
   }, [dateRange, viewMode, aggregation]);
 
   const toggleYear = (key: string) => {

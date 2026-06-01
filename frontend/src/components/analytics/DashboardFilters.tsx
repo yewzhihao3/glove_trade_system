@@ -8,6 +8,9 @@ export interface DashboardFiltersProps {
   setViewMode: (mode: 'trend' | 'compare') => void;
   aggregation: 'monthly' | 'yearly';
   setAggregation: (agg: 'monthly' | 'yearly') => void;
+  isDirty?: boolean;
+  onApply?: () => void;
+  isLoading?: boolean;
 }
 
 export const DashboardFilters: React.FC<DashboardFiltersProps> = ({
@@ -16,7 +19,10 @@ export const DashboardFilters: React.FC<DashboardFiltersProps> = ({
   viewMode,
   setViewMode,
   aggregation,
-  setAggregation
+  setAggregation,
+  isDirty = false,
+  onApply,
+  isLoading = false
 }) => {
   return (
     <div className="bg-white dark:bg-slate-800/40 p-4 rounded-xl border border-slate-200 dark:border-slate-700/50 mb-6 flex flex-wrap items-center gap-6 shadow-sm dark:shadow-none">
@@ -67,6 +73,30 @@ export const DashboardFilters: React.FC<DashboardFiltersProps> = ({
           <option value="yearly">Yearly</option>
         </select>
       </div>
+
+      <div className="flex-1" />
+
+      {/* Apply Button */}
+      {onApply && (
+        <button
+          onClick={onApply}
+          disabled={!isDirty || isLoading}
+          className={`flex items-center gap-2 px-5 py-2 rounded-lg font-semibold transition-all ${
+            isDirty && !isLoading
+              ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed border border-slate-200 dark:border-slate-700'
+          }`}
+        >
+          {isLoading ? (
+            <>
+              <div className="w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+              Applying...
+            </>
+          ) : (
+            'Apply Filters'
+          )}
+        </button>
+      )}
 
     </div>
   );

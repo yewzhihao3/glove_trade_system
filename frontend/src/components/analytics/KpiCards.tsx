@@ -5,9 +5,10 @@ import type { DateRangeValue } from '../DateRangePicker';
 
 export interface KpiCardsProps {
   dateRange: DateRangeValue;
+  onLoadChange?: (isLoading: boolean) => void;
 }
 
-const KpiCards: React.FC<KpiCardsProps> = ({ dateRange }) => {
+const KpiCards: React.FC<KpiCardsProps> = ({ dateRange, onLoadChange }) => {
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState({
     totalVolume: 0,
@@ -19,12 +20,16 @@ const KpiCards: React.FC<KpiCardsProps> = ({ dateRange }) => {
 
   useEffect(() => {
     let active = true;
+    const controller = new AbortController();
+    
     const fetchData = async () => {
       setLoading(true);
+      onLoadChange?.(true);
       try {
         const dates: DateParams = {
           date_from: dateRange.dateFrom || undefined,
-          date_to: dateRange.dateTo || undefined
+          date_to: dateRange.dateTo || undefined,
+          signal: controller.signal
         };
 
         const [buyers, countries, products, kpiSummary] = await Promise.all([
@@ -43,14 +48,21 @@ const KpiCards: React.FC<KpiCardsProps> = ({ dateRange }) => {
           topCountry: countries[0]?.ship_to_country || 'N/A',
           topProduct: products[0]?.product_code || 'N/A',
         });
-      } catch (error) {
+      } catch (error: any) {
+        if (error.name === 'CanceledError' || error.name === 'AbortError') return;
         console.error('Failed to load KPIs', error);
       } finally {
-        if (active) setLoading(false);
+        if (active) {
+          setLoading(false);
+          onLoadChange?.(false);
+        }
       }
     };
     fetchData();
-    return () => { active = false; };
+    return () => { 
+      active = false; 
+      controller.abort();
+    };
   }, [dateRange]);
 
   const formatNumber = (num: number) => new Intl.NumberFormat('en-US', { notation: 'compact' }).format(num);

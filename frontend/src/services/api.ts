@@ -107,6 +107,7 @@ export interface PotentialBuyer {
 export interface DateParams {
   date_from?: string | null;
   date_to?: string | null;
+  signal?: AbortSignal;
 }
 
 export interface BuyerByProduct {
@@ -280,22 +281,26 @@ export const tradeService = {
   },
 
   getTopBuyers: async (limit: number = 10, dates?: DateParams): Promise<AnalyticalResult[]> => {
-    const response = await api.get('/analytics/top-buyers', { params: { limit, ...dates } });
+    const { signal, ...restDates } = dates || {};
+    const response = await api.get('/analytics/top-buyers', { params: { limit, ...restDates }, signal });
     return response.data;
   },
 
   getTopCountries: async (limit: number = 10, dates?: DateParams): Promise<AnalyticalResult[]> => {
-    const response = await api.get('/analytics/top-countries', { params: { limit, ...dates } });
+    const { signal, ...restDates } = dates || {};
+    const response = await api.get('/analytics/top-countries', { params: { limit, ...restDates }, signal });
     return response.data;
   },
 
   getTopProducts: async (limit: number = 10, dates?: DateParams): Promise<AnalyticalResult[]> => {
-    const response = await api.get('/analytics/top-products', { params: { limit, ...dates } });
+    const { signal, ...restDates } = dates || {};
+    const response = await api.get('/analytics/top-products', { params: { limit, ...restDates }, signal });
     return response.data;
   },
 
   getMonthlyTrend: async (dates?: DateParams): Promise<AnalyticalResult[]> => {
-    const response = await api.get('/analytics/monthly-trend', { params: { ...dates } });
+    const { signal, ...restDates } = dates || {};
+    const response = await api.get('/analytics/monthly-trend', { params: { ...restDates }, signal });
     return response.data;
   },
 
@@ -325,21 +330,24 @@ export const tradeService = {
   },
 
   getYearlyTrend: async (dateParams?: DateParams): Promise<AnalyticalResult[]> => {
-    const params = new URLSearchParams(dateParams as Record<string, string>);
-    const response = await api.get(`/analytics/yearly-trend?${params}`);
+    const { signal, ...restDates } = dateParams || {};
+    const params = new URLSearchParams(restDates as Record<string, string>);
+    const response = await api.get(`/analytics/yearly-trend?${params}`, { signal });
     return response.data;
   },
 
   getKpiSummary: async (dates?: DateParams): Promise<KpiSummaryResponse> => {
-    const response = await api.get('/analytics/kpi-summary', { params: { ...dates } });
+    const { signal, ...restDates } = dates || {};
+    const response = await api.get('/analytics/kpi-summary', { params: { ...restDates }, signal });
     return response.data;
   },
 
   getYoyComparison: async (dateParams?: DateParams, product_code?: string, country?: string): Promise<any[]> => {
-    const params = new URLSearchParams(dateParams as Record<string, string>);
+    const { signal, ...restDates } = dateParams || {};
+    const params = new URLSearchParams(restDates as Record<string, string>);
     if (product_code) params.append('product_code', product_code);
     if (country) params.append('country', country);
-    const response = await api.get(`/analytics/yoy-comparison?${params}`);
+    const response = await api.get(`/analytics/yoy-comparison?${params}`, { signal });
     return response.data;
   },
 

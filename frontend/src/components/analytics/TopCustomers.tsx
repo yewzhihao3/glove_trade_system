@@ -6,6 +6,7 @@ import type { DateRangeValue } from '../DateRangePicker';
 
 export interface TopCustomersProps {
   dateRange: DateRangeValue;
+  onLoadChange?: (isLoading: boolean) => void;
 }
 
 const formatNumber = (num: number) => {
@@ -15,29 +16,40 @@ const formatNumber = (num: number) => {
   return num.toString();
 };
 
-const TopCustomers: React.FC<TopCustomersProps> = ({ dateRange }) => {
+const TopCustomers: React.FC<TopCustomersProps> = ({ dateRange, onLoadChange }) => {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
+    const controller = new AbortController();
+    
     const fetchData = async () => {
       setLoading(true);
+      onLoadChange?.(true);
       try {
         const dates: DateParams = {
           date_from: dateRange.dateFrom || undefined,
-          date_to: dateRange.dateTo || undefined
+          date_to: dateRange.dateTo || undefined,
+          signal: controller.signal
         };
         const res = await tradeService.getTopBuyers(8, dates);
         if (active) setData(res);
-      } catch (err) {
+      } catch (err: any) {
+        if (err.name === 'CanceledError' || err.name === 'AbortError') return;
         console.error('Failed to load top customers', err);
       } finally {
-        if (active) setLoading(false);
+        if (active) {
+          setLoading(false);
+          onLoadChange?.(false);
+        }
       }
     };
     fetchData();
-    return () => { active = false; };
+    return () => { 
+      active = false; 
+      controller.abort();
+    };
   }, [dateRange]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
