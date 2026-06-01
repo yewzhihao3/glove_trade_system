@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+// import { useState, useEffect, useRef, useCallback } from 'react';
 
-const API_URL = import.meta.env.VITE_API_URL as string;
-const RETRY_INTERVAL_MS = 2000;
-const SLOW_THRESHOLD_MS = 30_000;
-const MIN_DISPLAY_MS = 1000; // Prevent UI flicker on instant responses
+// const API_URL = import.meta.env.VITE_API_URL as string;
+// const RETRY_INTERVAL_MS = 2000;
+// const SLOW_THRESHOLD_MS = 30_000;
+// const MIN_DISPLAY_MS = 1000; // Prevent UI flicker on instant responses
 
 export type BackendStatus = 'loading' | 'slow' | 'ready' | 'error';
 
