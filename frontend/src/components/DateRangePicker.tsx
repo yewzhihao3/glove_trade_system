@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { CalendarDays } from 'lucide-react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { format, parseISO } from 'date-fns';
 
 export type DatePreset = 'last-7' | 'last-30' | 'last-3m' | 'last-1y' | 'custom';
 
@@ -85,25 +88,39 @@ export default function DateRangePicker({
           <div className="flex flex-col gap-2 transition-all duration-200">
             <div className="flex flex-col gap-1.5">
               <span className="text-xs text-slate-500">From</span>
-              <input
-                type="date"
-                value={localFrom}
-                onChange={(e) => {
-                  setLocalFrom(e.target.value);
-                  onChange({ preset: 'custom', dateFrom: e.target.value || null, dateTo: localTo || null });
+              <DatePicker
+                selected={localFrom ? parseISO(localFrom) : null}
+                onChange={(date: Date | null) => {
+                  const dateStr = date ? format(date, 'yyyy-MM-dd') : '';
+                  setLocalFrom(dateStr);
+                  onChange({ preset: 'custom', dateFrom: dateStr || null, dateTo: localTo || null });
                 }}
+                dateFormat="dd-MM-yy"
+                placeholderText="DD-MM-YY"
+                showMonthDropdown
+                showYearDropdown
+                dropdownMode="select"
+                portalId="root-portal"
+                wrapperClassName="w-full"
                 className="w-full bg-white dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200 px-3 py-2 rounded-lg text-sm outline-none focus:border-emerald-500 transition-colors"
               />
             </div>
             <div className="flex flex-col gap-1.5">
               <span className="text-xs text-slate-500">To</span>
-              <input
-                type="date"
-                value={localTo}
-                onChange={(e) => {
-                  setLocalTo(e.target.value);
-                  onChange({ preset: 'custom', dateFrom: localFrom || null, dateTo: e.target.value || null });
+              <DatePicker
+                selected={localTo ? parseISO(localTo) : null}
+                onChange={(date: Date | null) => {
+                  const dateStr = date ? format(date, 'yyyy-MM-dd') : '';
+                  setLocalTo(dateStr);
+                  onChange({ preset: 'custom', dateFrom: localFrom || null, dateTo: dateStr || null });
                 }}
+                dateFormat="dd-MM-yy"
+                placeholderText="DD-MM-YY"
+                showMonthDropdown
+                showYearDropdown
+                dropdownMode="select"
+                portalId="root-portal"
+                wrapperClassName="w-full"
                 className="w-full bg-white dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200 px-3 py-2 rounded-lg text-sm outline-none focus:border-emerald-500 transition-colors"
               />
             </div>
@@ -113,7 +130,7 @@ export default function DateRangePicker({
         {/* Resolved date hint for presets */}
         {value.preset !== 'custom' && value.dateFrom && value.dateTo && (
           <span className="text-xs text-slate-500 dark:text-slate-400">
-            {value.dateFrom} → {value.dateTo}
+            {format(parseISO(value.dateFrom), 'dd-MM-yy')} → {format(parseISO(value.dateTo), 'dd-MM-yy')}
           </span>
         )}
       </div>
@@ -143,24 +160,38 @@ export default function DateRangePicker({
       {value.preset === 'custom' && (
         <div className="flex flex-col gap-2 transition-all duration-200">
           <div className="flex items-center gap-2">
-            <input
-              type="date"
-              value={localFrom}
-              onChange={(e) => {
-                setLocalFrom(e.target.value);
-                onChange({ preset: 'custom', dateFrom: e.target.value || null, dateTo: localTo || null });
+            <DatePicker
+              selected={localFrom ? parseISO(localFrom) : null}
+              onChange={(date: Date | null) => {
+                const dateStr = date ? format(date, 'yyyy-MM-dd') : '';
+                setLocalFrom(dateStr);
+                onChange({ preset: 'custom', dateFrom: dateStr || null, dateTo: localTo || null });
               }}
-              className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200 px-3 py-2 rounded-lg text-sm outline-none focus:border-emerald-500 transition-colors"
+              dateFormat="dd-MM-yy"
+              placeholderText="DD-MM-YY"
+              showMonthDropdown
+              showYearDropdown
+              dropdownMode="select"
+              portalId="root-portal"
+              wrapperClassName="flex-1"
+              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200 px-3 py-2 rounded-lg text-sm outline-none focus:border-emerald-500 transition-colors"
             />
             <span className="text-slate-500 text-sm shrink-0">to</span>
-            <input
-              type="date"
-              value={localTo}
-              onChange={(e) => {
-                setLocalTo(e.target.value);
-                onChange({ preset: 'custom', dateFrom: localFrom || null, dateTo: e.target.value || null });
+            <DatePicker
+              selected={localTo ? parseISO(localTo) : null}
+              onChange={(date: Date | null) => {
+                const dateStr = date ? format(date, 'yyyy-MM-dd') : '';
+                setLocalTo(dateStr);
+                onChange({ preset: 'custom', dateFrom: localFrom || null, dateTo: dateStr || null });
               }}
-              className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200 px-3 py-2 rounded-lg text-sm outline-none focus:border-emerald-500 transition-colors"
+              dateFormat="dd-MM-yy"
+              placeholderText="DD-MM-YY"
+              showMonthDropdown
+              showYearDropdown
+              dropdownMode="select"
+              portalId="root-portal"
+              wrapperClassName="flex-1"
+              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200 px-3 py-2 rounded-lg text-sm outline-none focus:border-emerald-500 transition-colors"
             />
           </div>
         </div>
@@ -168,7 +199,7 @@ export default function DateRangePicker({
 
       {value.preset !== 'custom' && value.dateFrom && value.dateTo && (
         <span className="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
-          {value.dateFrom} → {value.dateTo}
+          {format(parseISO(value.dateFrom), 'dd-MM-yy')} → {format(parseISO(value.dateTo), 'dd-MM-yy')}
         </span>
       )}
     </div>

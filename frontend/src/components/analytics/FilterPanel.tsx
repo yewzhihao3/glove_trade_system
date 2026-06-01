@@ -1,5 +1,8 @@
 import React from 'react';
 import { Search, Filter, X } from 'lucide-react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { format, parseISO } from 'date-fns';
 
 export interface FilterState {
   search: string;
@@ -53,21 +56,37 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ filters, onChange, onApply, o
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">From</label>
-            <input
-              type="date"
-              name="date_from"
-              value={filters.date_from}
-              onChange={handleChange}
+            <DatePicker
+              selected={filters.date_from ? parseISO(filters.date_from) : null}
+              onChange={(date: Date | null) => {
+                const dateStr = date ? format(date, 'yyyy-MM-dd') : '';
+                onChange({ ...filters, date_from: dateStr });
+              }}
+              dateFormat="dd-MM-yy"
+              placeholderText="DD-MM-YY"
+              showMonthDropdown
+              showYearDropdown
+              dropdownMode="select"
+              portalId="root-portal"
+              wrapperClassName="w-full"
               className="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors"
             />
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">To</label>
-            <input
-              type="date"
-              name="date_to"
-              value={filters.date_to}
-              onChange={handleChange}
+            <DatePicker
+              selected={filters.date_to ? parseISO(filters.date_to) : null}
+              onChange={(date: Date | null) => {
+                const dateStr = date ? format(date, 'yyyy-MM-dd') : '';
+                onChange({ ...filters, date_to: dateStr });
+              }}
+              dateFormat="dd-MM-yy"
+              placeholderText="DD-MM-YY"
+              showMonthDropdown
+              showYearDropdown
+              dropdownMode="select"
+              portalId="root-portal"
+              wrapperClassName="w-full"
               className="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors"
             />
           </div>

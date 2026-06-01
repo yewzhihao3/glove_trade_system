@@ -93,3 +93,48 @@ select option {
   background-color: #020617;
   color: #94a3b8;
 }
+
+/* React DatePicker Fixes & Dark Theme */
+.react-datepicker-popper {
+  z-index: 9999 !important; /* Fix overlap issues */
+}
+
+.dark .react-datepicker {
+  background-color: #0f172a;
+  border-color: #334155;
+  color: #f8fafc;
+  font-family: inherit;
+}
+.dark .react-datepicker__header {
+  background-color: #1e293b;
+  border-bottom-color: #334155;
+}
+.dark .react-datepicker__current-month,
+.dark .react-datepicker-time__header,
+.dark .react-datepicker-year-header {
+  color: #f8fafc;
+}
+.dark .react-datepicker__day-name {
+  color: #94a3b8;
+}
+.dark .react-datepicker__day {
+  color: #e2e8f0;
+}
+.dark .react-datepicker__day:hover {
+  background-color: #334155;
+}
+.dark .react-datepicker__day--selected,
+.dark .react-datepicker__day--keyboard-selected {
+  background-color: #10b981;
+  color: #fff;
+}
+.dark .react-datepicker__day--disabled {
+  color: #475569;
+}
+.dark .react-datepicker__month-select,
+.dark .react-datepicker__year-select {
+  background-color: #0f172a;
+  color: #f8fafc;
+  border-color: #334155;
+}
+

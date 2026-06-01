@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UserPlus, Loader2, Sparkles, User, AlertCircle, Edit, Trash2, Mail, CheckCircle2, KeyRound, ShieldCheck } from 'lucide-react';
+import { UserPlus, Loader2, Sparkles, User, AlertCircle, Edit, Trash2, Mail, KeyRound, ShieldCheck } from 'lucide-react';
 import { authService } from '../services/auth';
 import { useAuth } from '../hooks/useAuth';
 
