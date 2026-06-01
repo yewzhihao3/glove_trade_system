@@ -16,6 +16,7 @@ export interface BackendHealthState {
 }
 
 export function useBackendHealth(): BackendHealthState {
+  /* TEMPORARILY DISABLED - Backend kept awake via UptimeRobot
   const [status, setStatus] = useState<BackendStatus>('loading');
   const [retryCount, setRetryCount] = useState(0);
   const startTimeRef = useRef<number>(Date.now());
@@ -101,5 +102,14 @@ export function useBackendHealth(): BackendHealthState {
     isSlow: status === 'slow',
     retryCount,
     manualRetry,
+  };
+  */
+
+  return {
+    status: 'ready',
+    isReady: true,
+    isSlow: false,
+    retryCount: 0,
+    manualRetry: () => {},
   };
 }
