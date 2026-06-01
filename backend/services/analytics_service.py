@@ -35,7 +35,7 @@ def get_top_buyers(db: Session, limit: int = 10, date_from: Optional[str] = None
     results = q.group_by(models.TradeHistory.company_name).order_by(
         func.sum(models.TradeHistory.total_quantity_pcs).desc()
     ).limit(limit).all()
-    return [{"company_name": r.company_name, "total_quantity_pcs": r.total_quantity_pcs} for r in results if r.company_name]
+    return [{"company_name": r.company_name, "total_quantity_pcs": r.total_quantity_pcs or 0} for r in results if r.company_name]
 
 
 def get_top_countries(db: Session, limit: int = 10, date_from: Optional[str] = None, date_to: Optional[str] = None) -> List[Dict]:
@@ -47,7 +47,7 @@ def get_top_countries(db: Session, limit: int = 10, date_from: Optional[str] = N
     results = q.group_by(models.TradeHistory.ship_to_country).order_by(
         func.sum(models.TradeHistory.total_quantity_pcs).desc()
     ).limit(limit).all()
-    return [{"ship_to_country": r.ship_to_country, "total_quantity_pcs": r.total_quantity_pcs} for r in results if r.ship_to_country]
+    return [{"ship_to_country": r.ship_to_country, "total_quantity_pcs": r.total_quantity_pcs or 0} for r in results if r.ship_to_country]
 
 
 def get_top_products(db: Session, limit: int = 10, date_from: Optional[str] = None, date_to: Optional[str] = None) -> List[Dict]:
@@ -59,7 +59,7 @@ def get_top_products(db: Session, limit: int = 10, date_from: Optional[str] = No
     results = q.group_by(models.TradeHistory.product_code).order_by(
         func.sum(models.TradeHistory.total_quantity_pcs).desc()
     ).limit(limit).all()
-    return [{"product_code": r.product_code, "total_quantity_pcs": r.total_quantity_pcs} for r in results if r.product_code]
+    return [{"product_code": r.product_code, "total_quantity_pcs": r.total_quantity_pcs or 0} for r in results if r.product_code]
 
 
 def get_monthly_trend(db: Session, date_from: Optional[str] = None, date_to: Optional[str] = None) -> List[Dict]:
@@ -85,7 +85,7 @@ def get_monthly_trend(db: Session, date_from: Optional[str] = None, date_to: Opt
         models.MonthlyTradeRollup.year.asc(),
         models.MonthlyTradeRollup.month.asc()
     ).all()
-    return [{"month": f"{r.year}-{r.month:02d}", "total_quantity_pcs": r.total_quantity_pcs} for r in results]
+    return [{"month": f"{r.year}-{r.month:02d}", "total_quantity_pcs": r.total_quantity_pcs or 0} for r in results]
 
 
 def get_company_trend(db: Session, company_name: str, date_from: Optional[str] = None, date_to: Optional[str] = None) -> List[Dict]:
@@ -103,7 +103,7 @@ def get_company_trend(db: Session, company_name: str, date_from: Optional[str] =
     ).order_by(
         func.substr(models.TradeHistory.posting_date, 1, 7).asc()
     ).all()
-    return [{"month": r.month, "total_quantity_pcs": r.total_quantity_pcs} for r in results]
+    return [{"month": r.month, "total_quantity_pcs": r.total_quantity_pcs or 0} for r in results]
 
 
 def get_top_sizes(db: Session, limit: int = 10, date_from: Optional[str] = None, date_to: Optional[str] = None) -> List[Dict]:
@@ -118,7 +118,7 @@ def get_top_sizes(db: Session, limit: int = 10, date_from: Optional[str] = None,
     results = q.group_by(models.TradeHistory.size).order_by(
         func.sum(models.TradeHistory.total_quantity_pcs).desc()
     ).limit(limit).all()
-    return [{"size": r.size, "total_quantity_pcs": r.total_quantity_pcs} for r in results if r.size]
+    return [{"size": r.size, "total_quantity_pcs": r.total_quantity_pcs or 0} for r in results if r.size]
 
 
 def get_top_items(db: Session, limit: int = 20, date_from: Optional[str] = None, date_to: Optional[str] = None) -> List[Dict]:
@@ -133,7 +133,7 @@ def get_top_items(db: Session, limit: int = 20, date_from: Optional[str] = None,
     results = q.group_by(models.TradeHistory.item_no).order_by(
         func.sum(models.TradeHistory.total_quantity_pcs).desc()
     ).limit(limit).all()
-    return [{"item_no": r.item_no, "total_quantity_pcs": r.total_quantity_pcs} for r in results if r.item_no]
+    return [{"item_no": r.item_no, "total_quantity_pcs": r.total_quantity_pcs or 0} for r in results if r.item_no]
 
 
 def get_top_groups(db: Session, limit: int = 10, date_from: Optional[str] = None, date_to: Optional[str] = None) -> List[Dict]:
@@ -148,7 +148,7 @@ def get_top_groups(db: Session, limit: int = 10, date_from: Optional[str] = None
     results = q.group_by(models.TradeHistory.posting_group).order_by(
         func.sum(models.TradeHistory.total_quantity_pcs).desc()
     ).limit(limit).all()
-    return [{"posting_group": r.posting_group, "total_quantity_pcs": r.total_quantity_pcs} for r in results if r.posting_group]
+    return [{"posting_group": r.posting_group, "total_quantity_pcs": r.total_quantity_pcs or 0} for r in results if r.posting_group]
 
 
 def get_top_salespeople(db: Session, limit: int = 10, date_from: Optional[str] = None, date_to: Optional[str] = None) -> List[Dict]:
@@ -163,7 +163,7 @@ def get_top_salespeople(db: Session, limit: int = 10, date_from: Optional[str] =
     results = q.group_by(models.TradeHistory.salesperson).order_by(
         func.sum(models.TradeHistory.total_quantity_pcs).desc()
     ).limit(limit).all()
-    return [{"salesperson": r.salesperson, "total_quantity_pcs": r.total_quantity_pcs} for r in results if r.salesperson]
+    return [{"salesperson": r.salesperson, "total_quantity_pcs": r.total_quantity_pcs or 0} for r in results if r.salesperson]
 
 
 def get_yearly_trend(db: Session, date_from: Optional[str] = None, date_to: Optional[str] = None) -> List[Dict]:
@@ -185,7 +185,7 @@ def get_yearly_trend(db: Session, date_from: Optional[str] = None, date_to: Opti
     ).order_by(
         models.MonthlyTradeRollup.year.asc()
     ).all()
-    return [{"year": str(r.year), "total_quantity_pcs": r.total_quantity_pcs} for r in results]
+    return [{"year": str(r.year), "total_quantity_pcs": r.total_quantity_pcs or 0} for r in results]
 
 
 def get_potential_buyers(

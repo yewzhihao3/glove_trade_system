@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import Optional
 from datetime import datetime, timedelta, date
+from dateutil.relativedelta import relativedelta
 import logging
 
 from models import models
@@ -35,7 +36,7 @@ def get_kpi_metrics(db: Session, date_from: Optional[str] = None, date_to: Optio
 def calculate_comparison_period(date_from: Optional[str], date_to: Optional[str]):
     """
     Calculates the previous equivalent period based on the provided date range.
-    Returns (prev_from: date, prev_to: date) or (None, None) if not applicable.
+    Uses calendar-aware shift for complete months/years, otherwise uses day-based shift.
     """
     if not date_from and not date_to:
         return None, None
@@ -44,10 +45,47 @@ def calculate_comparison_period(date_from: Optional[str], date_to: Optional[str]
         if date_from and date_to:
             dt_from = datetime.strptime(date_from, "%Y-%m-%d").date()
             dt_to = datetime.strptime(date_to, "%Y-%m-%d").date()
-            delta = dt_to - dt_from
             
-            prev_to = dt_from - timedelta(days=1)
-            prev_from = prev_to - delta
+            # Check calendar alignment
+            # A full month ends on the last day of the month, or the 1st of the next month.
+            aligned_to_1st = False
+            shift_months = 0
+            
+            if dt_from.day == 1:
+                # Case 1: dt_to is the end of a month
+                rd_end = relativedelta(dt_to + timedelta(days=1), dt_from)
+                # Case 2: dt_to is the 1st of a month
+                rd_start = relativedelta(dt_to, dt_from)
+                
+                if (dt_to + timedelta(days=1)).day == 1 and rd_end.days == 0:
+                    aligned_to_1st = True
+                    shift_months = rd_end.months + (rd_end.years * 12)
+                elif dt_to.day == 1 and rd_start.days == 0:
+                    aligned_to_1st = True
+                    shift_months = rd_start.months + (rd_start.years * 12)
+            
+            if aligned_to_1st and shift_months > 0:
+                prev_from = dt_from - relativedelta(months=shift_months)
+                
+                # relativedelta automatically handles end-of-month clamping (e.g., Mar 31 -> Feb 28)
+                # but if dt_to was exactly end-of-month, let's make sure the resulting prev_to is also exactly end-of-month.
+                # relativedelta(months=1) on May 31 gives April 30.
+                # relativedelta(months=1) on Feb 28 (non-leap) gives Jan 28, which is NOT end of month!
+                # To be perfectly robust for end-of-month:
+                if (dt_to + timedelta(days=1)).day == 1:
+                    # It was an end-of-month. Get the new end-of-month.
+                    prev_to = (prev_from + relativedelta(months=shift_months, days=-1)) 
+                    # Wait, prev_from + shift_months brings us back to dt_from.
+                    # We want the end of the previous period.
+                    # The previous period is exactly shift_months long.
+                    # So prev_to should be: prev_from + relativedelta(months=shift_months) - 1 day
+                    prev_to = prev_from + relativedelta(months=shift_months) - timedelta(days=1)
+                else:
+                    prev_to = dt_to - relativedelta(months=shift_months)
+            else:
+                delta = dt_to - dt_from
+                prev_to = dt_from - timedelta(days=1)
+                prev_from = prev_to - delta
             
             return prev_from, prev_to
             
