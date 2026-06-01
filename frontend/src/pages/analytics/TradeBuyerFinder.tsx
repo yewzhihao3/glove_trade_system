@@ -1,7 +1,6 @@
 import {
   useState,
   useEffect,
-  useRef,
   useCallback,
 } from 'react';
 import {
@@ -50,7 +49,7 @@ function extractSizeFromCode(code: string): string | null {
   return KNOWN_SIZES.includes(last) ? last : null;
 }
 
-type SortKey   = 'total_volume' | 'transaction_count' | 'last_purchase';
+type SortKey = 'total_volume' | 'transaction_count' | 'last_purchase';
 type ResultTab = 'top' | 'recommended' | 'ai';
 
 // ─── Tooltip ──────────────────────────────────────────────────────────────────
@@ -100,7 +99,7 @@ interface BuyersTableProps {
 }
 
 function BuyersTable({ data, matchReason, loading, emptyState }: BuyersTableProps) {
-  const [sortKey,  setSortKey]  = useState<SortKey>('total_volume');
+  const [sortKey, setSortKey] = useState<SortKey>('total_volume');
   const [sortDesc, setSortDesc] = useState(true);
 
   const toggleSort = (key: SortKey) => {
@@ -147,22 +146,21 @@ function BuyersTable({ data, matchReason, loading, emptyState }: BuyersTableProp
             <th className="p-4 border-b border-slate-200 dark:border-slate-700/50 w-10">#</th>
             <th className="p-4 border-b border-slate-200 dark:border-slate-700/50">Company</th>
             <th className="p-4 border-b border-slate-200 dark:border-slate-700/50">Country</th>
-            <SortTh col="total_volume"      label="Volume (PCS)" />
+            <SortTh col="total_volume" label="Volume (PCS)" />
             <SortTh col="transaction_count" label="Orders" />
-            <SortTh col="last_purchase"     label="Last Purchase" />
+            <SortTh col="last_purchase" label="Last Purchase" />
             {matchReason && <th className="p-4 border-b border-slate-200 dark:border-slate-700/50">Match Reason</th>}
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-200 dark:divide-slate-700/30">
           {sorted.map((row, idx) => {
-            const rec    = row as RecommendedBuyer;
+            const rec = row as RecommendedBuyer;
             const isTop3 = idx < 3;
             return (
               <tr
                 key={idx}
-                className={`transition-colors hover:bg-slate-50 dark:hover:bg-slate-700/20 ${
-                  isTop3 && !rec.is_exact_match ? 'bg-emerald-50 dark:bg-emerald-950/10' : ''
-                } ${rec.is_exact_match ? 'opacity-70' : ''}`}
+                className={`transition-colors hover:bg-slate-50 dark:hover:bg-slate-700/20 ${isTop3 && !rec.is_exact_match ? 'bg-emerald-50 dark:bg-emerald-950/10' : ''
+                  } ${rec.is_exact_match ? 'opacity-70' : ''}`}
               >
                 <td className="p-4">
                   {isTop3 ? (
@@ -189,11 +187,10 @@ function BuyersTable({ data, matchReason, loading, emptyState }: BuyersTableProp
                 {matchReason && (
                   <td className="p-4 whitespace-nowrap">
                     <div className="flex flex-col gap-1">
-                      <span className={`px-2 py-0.5 rounded-full text-xs border ${
-                        rec.is_exact_match
+                      <span className={`px-2 py-0.5 rounded-full text-xs border ${rec.is_exact_match
                           ? 'bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-600/40'
                           : 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-500/20'
-                      }`}>
+                        }`}>
                         {rec.match_reason}
                       </span>
                       {rec.is_exact_match && (
@@ -216,53 +213,69 @@ function BuyersTable({ data, matchReason, loading, emptyState }: BuyersTableProp
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function TradeBuyerFinder() {
-  // Filters
+  // Filters (Draft)
   const initDate = resolvePresetDates(DEFAULT_PRESET);
-  const [dateRange,    setDateRange]    = useState<DateRangeValue>({ preset: DEFAULT_PRESET, ...initDate });
-  const [productCode,  setProductCode]  = useState('');
-  const [size,         setSize]         = useState('');
-  const [country,      setCountry]      = useState('');
+  const [dateRange, setDateRange] = useState<DateRangeValue>({ preset: DEFAULT_PRESET, ...initDate });
+  const [productCode, setProductCode] = useState('');
+  const [size, setSize] = useState('');
+  const [country, setCountry] = useState('');
   // Track whether user manually picked size so auto-detect doesn't override it
-  const [sizeManual,   setSizeManual]   = useState(false);
+  const [sizeManual, setSizeManual] = useState(false);
+  const [diversityMode, setDiversityMode] = useState(false);
+
+  // Filters (Applied)
+  const [appliedDateRange, setAppliedDateRange] = useState<DateRangeValue>(dateRange);
+  const [appliedProductCode, setAppliedProductCode] = useState('');
+  const [appliedSize, setAppliedSize] = useState('');
+  const [appliedCountry, setAppliedCountry] = useState('');
+  const [appliedDiversityMode, setAppliedDiversityMode] = useState(false);
 
   // Results
-  const [topBuyers,   setTopBuyers]   = useState<BuyerByProduct[]>([]);
+  const [topBuyers, setTopBuyers] = useState<BuyerByProduct[]>([]);
   const [searchFallback, setSearchFallback] = useState(false);
-  const [recBuyers,   setRecBuyers]   = useState<RecommendedBuyer[]>([]);
+  const [recBuyers, setRecBuyers] = useState<RecommendedBuyer[]>([]);
   const [aiRecBuyers, setAiRecBuyers] = useState<AIRecommendedBuyer[]>([]);
-  const [aiVersion,   setAiVersion]   = useState<string | null>(null);
-  const [activeTab,   setActiveTab]   = useState<ResultTab>('top');
-  const [loadingTop,  setLoadingTop]  = useState(false);
-  const [loadingRec,  setLoadingRec]  = useState(false);
-  const [loadingAi,   setLoadingAi]   = useState(false);
+  const [aiVersion, setAiVersion] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<ResultTab>('top');
+  const [loadingTop, setLoadingTop] = useState(false);
+  const [loadingRec, setLoadingRec] = useState(false);
+  const [loadingAi, setLoadingAi] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-  const [diversityMode, setDiversityMode] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Derived
-  const hasFilters = productCode.trim() !== '' || (size !== '' && size !== 'All') || country.trim() !== '';
-  const isLoading  = loadingTop || loadingRec || loadingAi;
+  const draftHasFilters = productCode.trim() !== '' || (size !== '' && size !== 'All') || country.trim() !== '';
+  const appliedHasFilters = appliedProductCode.trim() !== '' || (appliedSize !== '' && appliedSize !== 'All') || appliedCountry.trim() !== '';
+  const isLoading = loadingTop || loadingRec || loadingAi;
+
+  const isDirty =
+    dateRange.preset !== appliedDateRange.preset ||
+    dateRange.dateFrom !== appliedDateRange.dateFrom ||
+    dateRange.dateTo !== appliedDateRange.dateTo ||
+    productCode !== appliedProductCode ||
+    size !== appliedSize ||
+    country !== appliedCountry ||
+    diversityMode !== appliedDiversityMode;
 
   const PRESET_LABELS: Record<string, string> = {
-    'last-7':  'Last 7 Days',
+    'last-7': 'Last 7 Days',
     'last-30': 'Last 30 Days',
     'last-3m': 'Last 3 Months',
     'last-1y': 'Last 1 Year',
-    'custom':  `${dateRange.dateFrom ?? '?'} → ${dateRange.dateTo ?? '?'}`,
+    'custom': `${appliedDateRange.dateFrom ?? '?'} → ${appliedDateRange.dateTo ?? '?'}`,
   };
-  const dateLabel = PRESET_LABELS[dateRange.preset] ?? dateRange.preset;
+  const dateLabel = PRESET_LABELS[appliedDateRange.preset] ?? appliedDateRange.preset;
 
   // ─── Fetch ──────────────────────────────────────────────────────────────────
 
   const buildParams = useCallback((): BuyerFinderParams => ({
-    product_code: productCode.trim() || undefined,
-    size:         (size === 'All' ? undefined : size) || undefined,
-    country:      country.trim() || undefined,
-    date_from:    dateRange.dateFrom ?? undefined,
-    date_to:      dateRange.dateTo   ?? undefined,
+    product_code: appliedProductCode.trim() || undefined,
+    size: (appliedSize === 'All' ? undefined : appliedSize) || undefined,
+    country: appliedCountry.trim() || undefined,
+    date_from: appliedDateRange.dateFrom ?? undefined,
+    date_to: appliedDateRange.dateTo ?? undefined,
     limit: 50,
-    diversity_mode: diversityMode,
-  }), [productCode, size, country, dateRange, diversityMode]);
+    diversity_mode: appliedDiversityMode,
+  }), [appliedProductCode, appliedSize, appliedCountry, appliedDateRange, appliedDiversityMode]);
 
   const runFetch = useCallback(async () => {
     const params = buildParams();
@@ -299,9 +312,9 @@ export default function TradeBuyerFinder() {
       .finally(() => setLoadingAi(false));
   }, [buildParams]);
 
-  // Auto-fetch debounced
+  // Auto-fetch ONLY when applied state changes
   useEffect(() => {
-    if (!hasFilters) {
+    if (!appliedHasFilters) {
       setTopBuyers([]);
       setRecBuyers([]);
       setAiRecBuyers([]);
@@ -309,18 +322,18 @@ export default function TradeBuyerFinder() {
       setHasSearched(false);
       return;
     }
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(runFetch, 400);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [productCode, size, country, dateRange, hasFilters, diversityMode]);
+    runFetch();
+  }, [appliedProductCode, appliedSize, appliedCountry, appliedDateRange, appliedHasFilters, appliedDiversityMode]);
 
   const handleApply = () => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    runFetch();
+    setAppliedDateRange(dateRange);
+    setAppliedProductCode(productCode);
+    setAppliedSize(size);
+    setAppliedCountry(country);
+    setAppliedDiversityMode(diversityMode);
   };
 
   const handleReset = () => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
     setProductCode('');
     setSize('');
     setSizeManual(false);
@@ -328,6 +341,14 @@ export default function TradeBuyerFinder() {
     setDiversityMode(false);
     const d = resolvePresetDates(DEFAULT_PRESET);
     setDateRange({ preset: DEFAULT_PRESET, ...d });
+
+    // Also clear applied immediately
+    setAppliedProductCode('');
+    setAppliedSize('');
+    setAppliedCountry('');
+    setAppliedDiversityMode(false);
+    setAppliedDateRange({ preset: DEFAULT_PRESET, ...d });
+
     setTopBuyers([]);
     setRecBuyers([]);
     setAiRecBuyers([]);
@@ -341,31 +362,40 @@ export default function TradeBuyerFinder() {
     exportToCSV(data, name);
   };
 
-  // ─── Active filter tags ──────────────────────────────────────────────────────
+  // ─── Active filter tags (uses Applied state) ──────────────────────────────────────────────────────
 
   const activeFilters: { label: string; onRemove: () => void }[] = [];
-  if (productCode.trim()) activeFilters.push({ label: `Product: ${productCode.trim()}`, onRemove: () => setProductCode('') });
-  if (size && size !== 'All') activeFilters.push({ label: `Size: ${size}`, onRemove: () => setSize('') });
-  if (country.trim())     activeFilters.push({ label: `Country: ${country.trim()}`,      onRemove: () => setCountry('') });
-  activeFilters.push({ label: `Date: ${dateLabel}`, onRemove: () => {} }); // date is always active, no remove
-  if (diversityMode)      activeFilters.push({ label: `Diversity Mode`, onRemove: () => setDiversityMode(false) });
+
+  const removeFilter = (key: string) => {
+    if (key === 'product') { setProductCode(''); setAppliedProductCode(''); }
+    if (key === 'size') { setSize(''); setAppliedSize(''); }
+    if (key === 'country') { setCountry(''); setAppliedCountry(''); }
+    if (key === 'diversity') { setDiversityMode(false); setAppliedDiversityMode(false); }
+  };
+
+  if (appliedProductCode.trim()) activeFilters.push({ label: `Product: ${appliedProductCode.trim()}`, onRemove: () => removeFilter('product') });
+  if (appliedSize && appliedSize !== 'All') activeFilters.push({ label: `Size: ${appliedSize}`, onRemove: () => removeFilter('size') });
+  if (appliedCountry.trim()) activeFilters.push({ label: `Country: ${appliedCountry.trim()}`, onRemove: () => removeFilter('country') });
+  activeFilters.push({ label: `Date: ${dateLabel}`, onRemove: () => { } }); // date is always active, no remove
+  if (appliedDiversityMode) activeFilters.push({ label: `Diversity Mode`, onRemove: () => removeFilter('diversity') });
 
   // ─── Result header string ────────────────────────────────────────────────────
 
-  const currentData   = activeTab === 'top' ? topBuyers : activeTab === 'ai' ? aiRecBuyers : recBuyers;
+  const currentData = activeTab === 'top' ? topBuyers : activeTab === 'ai' ? aiRecBuyers : recBuyers;
   const currentLoading = activeTab === 'top' ? loadingTop : activeTab === 'ai' ? loadingAi : loadingRec;
-  const buyerWord      = activeTab === 'top' ? 'buyer' : 'prospect';
+  const buyerWord = activeTab === 'top' ? 'buyer' : 'prospect';
 
   function resultHeader(): string {
     if (!hasSearched || currentLoading) return '';
-    const n      = currentData.length;
-    const prod   = productCode.trim();
-    const ctr    = country.trim();
+    const n = currentData.length;
+    const prod = appliedProductCode.trim();
+    const ctr = appliedCountry.trim();
+    const sz = appliedSize.trim();
     let suffix = '';
     if (prod) {
-      suffix = `for Product ${prod.length > 16 ? prod.slice(0, 16) + '…' : prod}${size ? ` (Size ${size})` : ''}`;
-    } else if (size) {
-      suffix = `for Size ${size}${ctr ? ` · ${ctr}` : ''}`;
+      suffix = `for Product ${prod.length > 16 ? prod.slice(0, 16) + '…' : prod}${sz ? ` (Size ${sz})` : ''}`;
+    } else if (sz) {
+      suffix = `for Size ${sz}${ctr ? ` · ${ctr}` : ''}`;
     } else if (ctr) {
       suffix = `for ${ctr}`;
     }
@@ -432,8 +462,8 @@ export default function TradeBuyerFinder() {
     </div>
   );
 
-  const topEmptyState   = !hasFilters ? NoFilterState : NoTopResultsState;
-  const recEmptyState   = !productCode.trim()
+  const topEmptyState = !appliedHasFilters ? NoFilterState : NoTopResultsState;
+  const recEmptyState = !appliedProductCode.trim()
     ? NoRecProductState
     : NoRecResultsState;
 
@@ -459,7 +489,7 @@ export default function TradeBuyerFinder() {
           {/* Panel header */}
           <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-700/40 flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Filters</span>
-            {hasFilters && (
+            {draftHasFilters && (
               <button
                 onClick={handleReset}
                 className="flex items-center gap-1 text-xs text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
@@ -478,7 +508,7 @@ export default function TradeBuyerFinder() {
                 <Tag className="w-3 h-3" /> Product & Size
               </p>
 
-              {!hasFilters && (
+              {!draftHasFilters && (
                 <p className="text-xs text-slate-500 italic">
                   Enter a product code, select a size, or choose a country.
                 </p>
@@ -602,19 +632,18 @@ export default function TradeBuyerFinder() {
             {/* Apply */}
             <button
               onClick={handleApply}
-              disabled={!hasFilters || isLoading}
-              title={!hasFilters ? 'Select a product code, size, or country to search' : ''}
-              className="flex items-center justify-center gap-2 w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white px-4 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-lg shadow-emerald-900/20"
+              disabled={!draftHasFilters || !isDirty || isLoading}
+              title={!draftHasFilters ? 'Select a product code, size, or country to search' : ''}
+              className={`flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-md ${draftHasFilters && isDirty && !isLoading
+                  ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/20'
+                  : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed shadow-none'
+                }`}
             >
               {isLoading
                 ? <><Loader2 className="w-4 h-4 animate-spin" />Searching…</>
                 : <><Search className="w-4 h-4" />Apply Filters</>
               }
             </button>
-
-            <p className="text-xs text-slate-600 text-center -mt-2">
-              Results also update automatically as you type.
-            </p>
           </div>
         </aside>
 
@@ -638,11 +667,10 @@ export default function TradeBuyerFinder() {
             <div className="flex">
               <button
                 onClick={() => setActiveTab('top')}
-                className={`flex items-center gap-2 px-5 py-3 text-sm font-medium transition-colors border-b-2 ${
-                  activeTab === 'top'
+                className={`flex items-center gap-2 px-5 py-3 text-sm font-medium transition-colors border-b-2 ${activeTab === 'top'
                     ? 'border-emerald-600 dark:border-emerald-500 text-emerald-600 dark:text-emerald-400'
                     : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
-                }`}
+                  }`}
               >
                 <TrendingUp className="w-4 h-4" />
                 Top Buyers
@@ -654,11 +682,10 @@ export default function TradeBuyerFinder() {
               </button>
               <button
                 onClick={() => setActiveTab('recommended')}
-                className={`flex items-center gap-2 px-5 py-3 text-sm font-medium transition-colors border-b-2 ${
-                  activeTab === 'recommended'
+                className={`flex items-center gap-2 px-5 py-3 text-sm font-medium transition-colors border-b-2 ${activeTab === 'recommended'
                     ? 'border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400'
                     : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
-                }`}
+                  }`}
               >
                 <Sparkles className="w-4 h-4" />
                 Lookalikes
@@ -670,11 +697,10 @@ export default function TradeBuyerFinder() {
               </button>
               <button
                 onClick={() => setActiveTab('ai')}
-                className={`flex items-center gap-2 px-5 py-3 text-sm font-medium transition-colors border-b-2 ${
-                  activeTab === 'ai'
+                className={`flex items-center gap-2 px-5 py-3 text-sm font-medium transition-colors border-b-2 ${activeTab === 'ai'
                     ? 'border-purple-600 dark:border-purple-500 text-purple-600 dark:text-purple-400'
                     : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
-                }`}
+                  }`}
               >
                 <Zap className="w-4 h-4" />
                 AI Recommended
