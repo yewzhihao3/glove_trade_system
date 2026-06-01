@@ -167,6 +167,37 @@ export interface BuyerFinderParams extends DateParams {
   diversity_mode?: boolean;
 }
 
+export type KpiGrowthStatus = 'positive' | 'negative' | 'neutral' | 'unavailable' | 'new_activity' | 'fully_declined';
+
+export interface KpiSummaryPeriodMetadata {
+  from_date: string | null;
+  to_date: string | null;
+}
+
+export interface KpiMetrics {
+  volume: number;
+  active_buyer_count: number;
+  active_country_count: number;
+  active_product_count: number;
+}
+
+export interface KpiGrowth {
+  volume_pct: number | null;
+  buyer_pct: number | null;
+  country_pct: number | null;
+  product_pct: number | null;
+}
+
+export interface KpiSummaryResponse {
+  current_metrics: KpiMetrics;
+  previous_metrics: KpiMetrics | null;
+  growth: KpiGrowth;
+  growth_status: KpiGrowthStatus;
+  comparison_available: boolean;
+  current_period: KpiSummaryPeriodMetadata;
+  comparison_period: KpiSummaryPeriodMetadata;
+}
+
 export const leadService = {
   getLeads: async (params?: { hs_code?: string; country?: string; keyword?: string }) => {
     const response = await api.get('/leads', { params });
@@ -296,6 +327,11 @@ export const tradeService = {
   getYearlyTrend: async (dateParams?: DateParams): Promise<AnalyticalResult[]> => {
     const params = new URLSearchParams(dateParams as Record<string, string>);
     const response = await api.get(`/analytics/yearly-trend?${params}`);
+    return response.data;
+  },
+
+  getKpiSummary: async (dates?: DateParams): Promise<KpiSummaryResponse> => {
+    const response = await api.get('/analytics/kpi-summary', { params: { ...dates } });
     return response.data;
   },
 

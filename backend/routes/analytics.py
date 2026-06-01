@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from database import get_db
 from schemas import schemas
-from services import analytics_service, recommendation_engine
+from services import analytics_service, recommendation_engine, kpi_summary_service
 from routes.auth import get_current_user
 
 router = APIRouter(prefix="/analytics", tags=["Analytics"])
@@ -236,3 +236,12 @@ def get_recommended_buyers_ai(
         include_existing=include_existing,
         diversity_mode=diversity_mode
     )
+
+@router.get("/kpi-summary", response_model=schemas.KpiSummaryResponse)
+def get_kpi_summary(
+    date_from: Optional[str] = Query(None),
+    date_to: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    return kpi_summary_service.get_kpi_summary(db, date_from, date_to)

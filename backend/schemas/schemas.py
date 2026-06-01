@@ -1,6 +1,7 @@
 from pydantic import BaseModel, ConfigDict
 from typing import List, Optional, Literal
-from datetime import datetime
+from datetime import datetime, date
+from enum import Enum
 
 class HSCodeBase(BaseModel):
     hs_code: str
@@ -180,3 +181,40 @@ class AIRecommendedBuyerResponse(BaseModel):
 class AIRecommendationEnvelope(BaseModel):
     recommendation_version: str
     data: List[AIRecommendedBuyerResponse]
+
+
+# --- KPI Summary Schemas ---
+
+class KpiGrowthStatus(str, Enum):
+    POSITIVE = "positive"
+    NEGATIVE = "negative"
+    NEUTRAL = "neutral"
+    UNAVAILABLE = "unavailable"
+    NEW_ACTIVITY = "new_activity"
+    FULLY_DECLINED = "fully_declined"
+
+class KpiSummaryPeriodMetadata(BaseModel):
+    from_date: Optional[date] = None
+    to_date: Optional[date] = None
+
+class KpiMetrics(BaseModel):
+    volume: int
+    active_buyer_count: int
+    active_country_count: int
+    active_product_count: int
+
+class KpiGrowth(BaseModel):
+    volume_pct: Optional[float] = None
+    buyer_pct: Optional[float] = None
+    country_pct: Optional[float] = None
+    product_pct: Optional[float] = None
+
+class KpiSummaryResponse(BaseModel):
+    current_metrics: KpiMetrics
+    previous_metrics: Optional[KpiMetrics] = None
+    growth: KpiGrowth
+    growth_status: KpiGrowthStatus
+    comparison_available: bool
+    current_period: KpiSummaryPeriodMetadata
+    comparison_period: KpiSummaryPeriodMetadata
+
